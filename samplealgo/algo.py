@@ -3,12 +3,14 @@ import pandas as pd
 import time
 import logging
 import concurrent.futures
+import requests
 from .btest import simulate
 
 from .universe import Universe
 
 logger = logging.getLogger(__name__)
-logging.basicConfig(level=logging.DEBUG)
+logging.basicConfig(level=logging.INFO)
+#logging.getLogger(__name__).setLevel(logging.warning)
 
 NY = 'America/New_York'
 api = tradeapi.REST()
