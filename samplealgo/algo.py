@@ -6,7 +6,6 @@ import concurrent.futures
 import requests
 from .btest import simulate
 from .universe import Universe
-from pylivetrader.api import *
 
 logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO)
