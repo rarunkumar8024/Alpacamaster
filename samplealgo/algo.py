@@ -8,7 +8,7 @@ from datetime import datetime
 #import backtrader as bt
 from .btest import simulate
 from .universe import Universe
-import pipeline_live as pipeline
+#import pipeline_live as pipeline
 
 
 logger = logging.getLogger(__name__)
