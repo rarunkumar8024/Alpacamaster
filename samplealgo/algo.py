@@ -69,7 +69,7 @@ def prices(symbols):
     if now.time() >= pd.Timestamp('09:30', tz=NY).time():
         end_dt = now - \
             pd.Timedelta(now.strftime('%H:%M:%S')) - pd.Timedelta('1 minute')
-    print("Inside prices -- Now -{}, end_dt - {}, symbols - {}".format(now, end_dt, symbols))
+    #print("Inside prices -- Now -{}, end_dt - {}, symbols - {}".format(now, end_dt, symbols))
     return _get_polygon_prices(symbols, end_dt)
 
 
@@ -141,11 +141,13 @@ def get_orders(api, price_map, position_size=100, max_positions=5):
     # position size so that we don't end up holding too many positions.
     max_to_buy = max_positions - (len(positions) - len(to_sell))
     print("Max to buy - {}".format(max_to_buy))
-    
+    cash = float (account.cash)
     for symbol in to_buy:
         if max_to_buy <= 0:
             break
-        max_shares = (float(account.cash) /float (max (price_map[symbol].close.values[-1], getcurrentprice(symbol))))
+        currentprice = getcurrentprice(symbol)
+        max_shares = (cash /float (max (price_map[symbol].close.values[-1],currentprice)))
+        
         print ("max_shares - {}".format(max_shares))
         #shares = (min (position_size, max_shares) // float(price_map[symbol].close.values[-1]))
         shares = int(min (position_size, max_shares))
@@ -159,6 +161,7 @@ def get_orders(api, price_map, position_size=100, max_positions=5):
         })
         logger.info(f'order(buy): {symbol} for {shares}')
         max_to_buy -= 1
+        cash -= (shares * currentprice)
     return orders
 
 
@@ -299,7 +302,8 @@ def stoploss():
             marketprice = getcurrentprice(symbol)
             stoplossprice = float (lossfactor * marketprice)
             costbasis = float(holdings[symbol].avg_entry_price)
-            print("stoplossprice - {}, costbasis - {}, current price - {}".format(stoplossprice,costbasis,marketprice))
+            print("Calc stoplossprice - {}, stoploss - {}, costbasis - {}, current price - {}".format(stoplossprice,stopprice[symbol],costbasis,marketprice))
+            
             if stoplossprice > stopprice[symbol]:
                 stopprice[symbol] = stoplossprice
                 print("stoploss value updated stoploss - {}, costbasis - {}, current price - {}".format(stopprice[symbol],costbasis,marketprice))
