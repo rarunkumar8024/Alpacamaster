@@ -5,7 +5,7 @@ import logging
 import concurrent.futures
 import requests
 from datetime import datetime
-import backtrader as bt
+#import backtrader as bt
 from .btest import simulate
 from .universe import Universe
 import pipeline_live as pipeline
@@ -223,11 +223,11 @@ def trade(orders, wait=30):
         time.sleep(1)
         count -= 1
 
-class SmaCross(bt.SignalStrategy):
-    def __init__(self):
-        sma1, sma2 = bt.ind.SMA(period=10), bt.ind.SMA(period=30)
-        crossover = bt.ind.CrossOver(sma1, sma2)
-        self.signal_add(bt.SIGNAL_LONG, crossover)
+#class SmaCross(bt.SignalStrategy):
+#    def __init__(self):
+#        sma1, sma2 = bt.ind.SMA(period=10), bt.ind.SMA(period=30)
+#        crossover = bt.ind.CrossOver(sma1, sma2)
+#        self.signal_add(bt.SIGNAL_LONG, crossover)
 
 
 
