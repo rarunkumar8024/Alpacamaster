@@ -275,7 +275,7 @@ def main():
 def set_stoploss(symbol):
     try:
         position = api.get_position(symbol)
-        costbasis = float(position.cost_basis)
+        costbasis = float(position.avg_entry_price)
         if symbol in stopprice:
             print("stopprice already set for the stock {}, recalculating".format(symbol))
             stopprice[symbol] = lossfactor * costbasis
@@ -298,7 +298,7 @@ def stoploss():
         for symbol in holding_symbol:
             marketprice = getcurrentprice(symbol)
             stoplossprice = float (lossfactor * marketprice)
-            costbasis = float(holdings[symbol].cost_basis)
+            costbasis = float(holdings[symbol].avg_entry_price)
             print("stoplossprice - {}, costbasis - {}, current price - {}".format(stoplossprice,costbasis,marketprice))
             if stoplossprice > stopprice[symbol]:
                 stopprice[symbol] = stoplossprice
