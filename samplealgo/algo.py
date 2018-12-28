@@ -298,7 +298,12 @@ def stoploss():
         logger.info(positions)
         holdings = {p.symbol: p for p in positions}
         holding_symbol = set(holdings.keys())
+        
         for symbol in holding_symbol:
+            if symbol in stopprice: 
+                None 
+            else: 
+                set_stoploss(symbol)
             marketprice = getcurrentprice(symbol)
             stoplossprice = float (lossfactor * marketprice)
             costbasis = float(holdings[symbol].avg_entry_price)
