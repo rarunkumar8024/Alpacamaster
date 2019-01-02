@@ -8,6 +8,7 @@ from datetime import datetime
 #import backtrader as bt
 from .btest import simulate
 from .universe import Universe
+from .pipe import make_pipeline
 #import pipeline_live as pipeline
 
 
@@ -20,6 +21,7 @@ api = tradeapi.REST()
 stopprice = {}
 lossfactor = 0.95
 orders = []
+MaxCandidates = 25
 
 def _dry_run_submit(*args, **kwargs):
     logging.info(f'submit({args}, {kwargs})')
@@ -248,14 +250,18 @@ def main():
         set_stoploss(symbol)
         
     # end of initial stop loss assignment
-    
+
     while True:
         # clock API returns the server time including
         # the boolean flag for market open
         clock = api.get_clock()
         now = clock.timestamp
         if clock.is_open and done != now.strftime('%Y-%m-%d'):
-            price_map = prices(Universe)
+            pipeout = make_pipeline(MaxCandidates)
+            stocks_best = pipeout[pipeout['stocks_best']].index.tolist()
+            #price_map = prices(Universe)
+            print("Best stocks - {}".format(stocks_best))
+            price_map = prices(stocks_best)
             orders = get_orders(api, price_map)
             trade(orders)
             # flag it as done so it doesn't work again for the day
@@ -298,6 +304,7 @@ def stoploss():
         logger.info(positions)
         holdings = {p.symbol: p for p in positions}
         holding_symbol = set(holdings.keys())
+        
         
         for symbol in holding_symbol:
             if symbol in stopprice: 
