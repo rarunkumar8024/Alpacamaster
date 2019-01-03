@@ -109,7 +109,8 @@ def get_orders(api, price_map, position_size=100, max_positions=5):
     print("account cash - {}".format(account.cash))
     # take the top one twentieth out of ranking,
     # excluding stocks too expensive to buy a share
-    for symbol, _ in ranked[:len(ranked) // 20]:
+    #for symbol, _ in ranked[:len(ranked) // 20]:
+    for symbol, _ in ranked[:len(ranked)]:
         price = float(price_map[symbol].close.values[-1])
         if price > float(account.cash):
             continue
@@ -248,8 +249,14 @@ def main():
     holding_symbol = set(holdings.keys())
     for symbol in holding_symbol:
         set_stoploss(symbol)
-        
     # end of initial stop loss assignment
+    #Initial calls
+    pipeout = make_pipeline(MaxCandidates)
+    stocks_best = pipeout[pipeout['stocks_best']].index.tolist()
+    #price_map = prices(Universe)
+    print("Best stocks - {}".format(stocks_best))
+    price_map = prices(stocks_best)
+           
 
     while True:
         # clock API returns the server time including
@@ -271,6 +278,11 @@ def main():
         time.sleep(60)    
         if clock.is_open:
             stoploss()
+            if float(api.get_account().cash) >= 1.0:
+                orders = get_orders(api, price_map)
+                trade(orders)
+
+
         #if (clock.is_close = "False"):
         #cerebro = bt.Cerebro()
         #cerebro.addstrategy(SmaCross)
