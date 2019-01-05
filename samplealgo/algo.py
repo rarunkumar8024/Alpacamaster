@@ -94,7 +94,7 @@ def calc_scores(price_map, dayindex=-1):
     return sorted(diffs.items(), key=lambda x: x[1])
 
 
-def get_orders(api, price_map, position_size=100, max_positions=5):
+def get_orders(api, price_map, todays_order, position_size=100, max_positions=5):
     '''Calculate the scores with the universe to build the optimal
     portfolio as of today, and extract orders to transition from
     current portfolio to the calculated state.
@@ -122,8 +122,11 @@ def get_orders(api, price_map, position_size=100, max_positions=5):
     logger.info(positions)
     holdings = {p.symbol: p for p in positions}
     holding_symbol = set(holdings.keys())
-    to_sell = holding_symbol - to_buy
-    to_buy = to_buy - holding_symbol
+    todays_order_array = {q['symbol'] for q in todays_order}
+    print("Todays order array - {}".format(todays_order_array))
+    to_sell = holding_symbol - to_buy - todays_order_array
+    to_buy = to_buy - holding_symbol - todays_order_array
+
     orders = []
     print("Holding positions - {}".format(positions))
     print("To Sell - {}".format(to_sell))
@@ -190,7 +193,9 @@ def trade(orders, wait=30):
                 time_in_force='day',
             )
             symbol = order['symbol']
-            if symbol in stopprice: del stopprice[symbol]
+            if symbol in stopprice: 
+                print("Removed {} from stop price with stoploss as {}".format(symbol,stopprice[symbol]))
+                del stopprice[symbol]
         except Exception as e:
             logger.error(e)
     count = wait
@@ -241,6 +246,9 @@ def main():
     '''The entry point. Goes into an infinite loop and
     start trading every morning at the market open.'''
     done = None
+    #sold_today = {}
+    todays_order = []
+    test_flag = True
     logging.info('start running')
     #set initial stop loss values for the stocks in the portfolio, just in case algo was had a problem and need to restart
     positions = api.list_positions()
@@ -256,42 +264,34 @@ def main():
     #price_map = prices(Universe)
     print("Best stocks - {}".format(stocks_best))
     price_map = prices(stocks_best)
-           
-
+         
     while True:
         # clock API returns the server time including
         # the boolean flag for market open
         clock = api.get_clock()
         now = clock.timestamp
-        if clock.is_open and done != now.strftime('%Y-%m-%d'):
+        if (clock.is_open and done != now.strftime('%Y-%m-%d')) or test_flag:
+            todays_order = []
             pipeout = make_pipeline(MaxCandidates)
             stocks_best = pipeout[pipeout['stocks_best']].index.tolist()
             #price_map = prices(Universe)
             print("Best stocks - {}".format(stocks_best))
             price_map = prices(stocks_best)
-            orders = get_orders(api, price_map)
+            orders = get_orders(api, price_map,todays_order)
             trade(orders)
+            todays_order = orders
+            print("todays_order - {}, orders - {}".format(todays_order, orders))
             # flag it as done so it doesn't work again for the day
             # TODO: this isn't tolerant to the process restart
             done = now.strftime('%Y-%m-%d')
             logger.info(f'done for {done}')
         time.sleep(60)    
-        if clock.is_open:
+        if clock.is_open or test_flag:
             stoploss()
             if float(api.get_account().cash) >= 1.0:
-                orders = get_orders(api, price_map)
+                orders = get_orders(api, price_map,todays_order)
                 trade(orders)
-
-
-        #if (clock.is_close = "False"):
-        #cerebro = bt.Cerebro()
-        #cerebro.addstrategy(SmaCross)
-            #data0 = bt.feeds.YahooFinanceData(dataname='MSFT', fromdate=datetime(2011, 1, 1),
-        #data0 = bt.feeds.YahooFinanceData(prices(Universe), fromdate=datetime(2012, 1, 1), todate=datetime(2018, 12, 15))
-        #cerebro.adddata(data0)
-
-        #cerebro.run()
-        #cerebro.plot()
+                todays_order = orders
 
 def set_stoploss(symbol):
     try:
@@ -316,8 +316,7 @@ def stoploss():
         logger.info(positions)
         holdings = {p.symbol: p for p in positions}
         holding_symbol = set(holdings.keys())
-        
-        
+                
         for symbol in holding_symbol:
             if symbol in stopprice: 
                 None 
@@ -331,7 +330,7 @@ def stoploss():
             if stoplossprice > stopprice[symbol]:
                 stopprice[symbol] = stoplossprice
                 print("stoploss value updated stoploss - {}, costbasis - {}, current price - {}".format(stopprice[symbol],costbasis,marketprice))
-            if marketprice < stopprice[symbol]:
+            if marketprice <= stopprice[symbol]:
                 # Market price is less than stop loss price.  Sell the stock.
                 shares = holdings[symbol].qty
                 orders.append({
