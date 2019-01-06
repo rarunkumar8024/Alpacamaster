@@ -1,6 +1,6 @@
 -i https://pypi.org/simple
 alembic==1.0.5
-alpaca-trade-api==0.14
+alpaca-trade-api==0.22
 asyncio-nats-client==0.8.2
 bcolz==0.12.1
 bottleneck==1.2.1
