@@ -266,16 +266,22 @@ def main():
     price_map = prices(stocks_best)
          
     while True:
-        # clock API returns the server time including
-        # the boolean flag for market open
-        clock = api.get_clock()
-        now = clock.timestamp
-        if (clock.is_open and done != now.strftime('%Y-%m-%d')) or test_flag:
-            todays_order = []
+        
+        now = pd.Timestamp.now(tz=NY)
+        if (now.time() >= pd.Timestamp('09:00', tz=NY).time()) or test_flag:
             pipeout = make_pipeline(MaxCandidates)
             stocks_best = pipeout[pipeout['stocks_best']].index.tolist()
             #price_map = prices(Universe)
             print("Best stocks - {}".format(stocks_best))
+            
+        # clock API returns the server time including
+        # the boolean flag for market open
+        clock = api.get_clock()
+        now = clock.timestamp
+
+        if (clock.is_open and done != now.strftime('%Y-%m-%d')) or test_flag:
+            todays_order = []
+            
             price_map = prices(stocks_best)
             orders = get_orders(api, price_map,todays_order)
             trade(orders)
