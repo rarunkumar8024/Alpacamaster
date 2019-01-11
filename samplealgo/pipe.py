@@ -20,7 +20,7 @@ def make_pipeline_base():
     df = eng.run_pipeline(pipe)
     return (df)
 
-def make_pipeline(MaxCandidates):
+def make_pipeline(MaxCandidates=25,acash=250.0):
     
     LowVar=75
     HighVar=100
@@ -39,21 +39,25 @@ def make_pipeline(MaxCandidates):
     LongAvg = SimpleMovingAverage(inputs=[USEquityPricing.close],window_length=200,mask=base_universe)
 
     percent_difference = (ShortAvg - LongAvg) / LongAvg
+    #portfolio_ready = percent_difference *
     # Filter to select securities to long.
     stocks_best = percent_difference.top(MaxCandidates)
-    securities_to_trade = (stocks_best)
     
+    securities_to_trade = (stocks_best)
+    port_value = ShortAvg <= acash
     pipe = Pipeline({
         'close': USEquityPricing.close.latest,
         'marketcap': IEXKeyStats.marketcap.latest,
         'stocks_best': stocks_best,
-    }, screen=securities_to_trade)
+    }, screen=securities_to_trade & port_value)
 
     df = eng.run_pipeline(pipe)
     return (df)
+
 '''
 if __name__ == "__main__":
     MaxCandidates = 25
-    my_pipe = make_pipeline(MaxCandidates)
+    acash = 50
+    my_pipe = make_pipeline(MaxCandidates,acash)
     print("pipeline stocks - {}".format(my_pipe))
 '''
