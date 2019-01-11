@@ -248,7 +248,7 @@ def main():
     done = None
     #sold_today = {}
     todays_order = []
-    test_flag = True
+    test_flag = False
     logging.info('start running')
     #set initial stop loss values for the stocks in the portfolio, just in case algo was had a problem and need to restart
     positions = api.list_positions()
@@ -259,7 +259,8 @@ def main():
         set_stoploss(symbol)
     # end of initial stop loss assignment
     #Initial calls
-    pipeout = make_pipeline(MaxCandidates,api.get_account().cash)
+    print ("before calling pipeline acash value - {}".format(api.get_account().portfolio_value))
+    pipeout = make_pipeline(MaxCandidates,api.get_account().portfolio_value)
     stocks_best = pipeout[pipeout['stocks_best']].index.tolist()
     #price_map = prices(Universe)
     print("Best stocks - {}".format(stocks_best))
@@ -269,7 +270,7 @@ def main():
         
         now = pd.Timestamp.now(tz=NY)
         if (now.time() >= pd.Timestamp('09:00', tz=NY).time() and done != now.strftime('%Y-%m-%d')) or test_flag:
-            pipeout = make_pipeline(MaxCandidates,api.get_account().cash)
+            pipeout = make_pipeline(MaxCandidates,api.get_account().portfolio_value)
             stocks_best = pipeout[pipeout['stocks_best']].index.tolist()
             #price_map = prices(Universe)
             print("Best stocks - {}".format(stocks_best))
