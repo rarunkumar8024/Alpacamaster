@@ -259,7 +259,7 @@ def main():
         set_stoploss(symbol)
     # end of initial stop loss assignment
     #Initial calls
-    pipeout = make_pipeline(MaxCandidates,api.get_account.cash)
+    pipeout = make_pipeline(MaxCandidates,api.get_account().cash)
     stocks_best = pipeout[pipeout['stocks_best']].index.tolist()
     #price_map = prices(Universe)
     print("Best stocks - {}".format(stocks_best))
@@ -269,7 +269,7 @@ def main():
         
         now = pd.Timestamp.now(tz=NY)
         if (now.time() >= pd.Timestamp('09:00', tz=NY).time() and done != now.strftime('%Y-%m-%d')) or test_flag:
-            pipeout = make_pipeline(MaxCandidates,api.get_account.cash)
+            pipeout = make_pipeline(MaxCandidates,api.get_account().cash)
             stocks_best = pipeout[pipeout['stocks_best']].index.tolist()
             #price_map = prices(Universe)
             print("Best stocks - {}".format(stocks_best))

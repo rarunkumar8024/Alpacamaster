@@ -44,7 +44,7 @@ def make_pipeline(MaxCandidates=25,acash=250.0):
     stocks_best = percent_difference.top(MaxCandidates)
     
     securities_to_trade = (stocks_best)
-    port_value = ShortAvg <= acash
+    port_value = ShortAvg <= float(acash)
     pipe = Pipeline({
         'close': USEquityPricing.close.latest,
         'marketcap': IEXKeyStats.marketcap.latest,
