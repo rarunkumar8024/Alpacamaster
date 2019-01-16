@@ -123,6 +123,8 @@ def get_orders(api, price_map, todays_order, position_size=100, max_positions=25
     holdings = {p.symbol: p for p in positions}
     holding_symbol = set(holdings.keys())
     print("Todays order - {}".format(todays_order))
+    if todays_order is None:
+        todays_order = set()
     
     #todays_order_array = {q.symbol for q in todays_order if (q['side'] == 'buy' or q['side'] == 'sell')}
     #print("Todays order array - {}".format(todays_order_array))
