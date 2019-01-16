@@ -122,10 +122,12 @@ def get_orders(api, price_map, todays_order, position_size=100, max_positions=25
     logger.info(positions)
     holdings = {p.symbol: p for p in positions}
     holding_symbol = set(holdings.keys())
-    todays_order_array = {q['symbol'] for q in todays_order}
-    print("Todays order array - {}".format(todays_order_array))
-    to_sell = holding_symbol - to_buy - todays_order_array
-    to_buy = to_buy - holding_symbol - todays_order_array
+    print("Todays order - {}".format(todays_order))
+    
+    #todays_order_array = {q.symbol for q in todays_order if (q['side'] == 'buy' or q['side'] == 'sell')}
+    #print("Todays order array - {}".format(todays_order_array))
+    to_sell = holding_symbol - to_buy - todays_order
+    to_buy = to_buy - holding_symbol - todays_order
 
     orders = []
     print("Holding positions - {}".format(positions))
@@ -247,7 +249,7 @@ def main():
     start trading every morning at the market open.'''
     done = None
     #sold_today = {}
-    todays_order = []
+    todays_order = {}
     test_flag = False
     logging.info('start running')
     #set initial stop loss values for the stocks in the portfolio, just in case algo was had a problem and need to restart
@@ -281,11 +283,12 @@ def main():
         now = clock.timestamp
 
         if (clock.is_open and done != now.strftime('%Y-%m-%d')) or test_flag:
-            todays_order = []
+            todays_order = {}
+            todays_order = gettodaysorder()
             price_map = prices(stocks_best)
             orders = get_orders(api, price_map,todays_order)
             trade(orders)
-            todays_order = orders
+            todays_order = gettodaysorder()
             print("todays_order - {}, orders - {}".format(todays_order, orders))
             # flag it as done so it doesn't work again for the day
             # TODO: this isn't tolerant to the process restart
@@ -297,7 +300,7 @@ def main():
             if float(api.get_account().cash) >= 1.0:
                 orders = get_orders(api, price_map,todays_order)
                 trade(orders)
-                todays_order = orders
+                todays_order = gettodaysorder()
 
 def set_stoploss(symbol):
     try:
@@ -350,4 +353,22 @@ def stoploss():
     except Exception as e:
         logger.error(e)
             
-        
+def gettodaysorder():
+    try:
+        now = pd.Timestamp.now(tz='US/Eastern')
+        now1= pd.Timestamp.now(tz='UTC')
+        until_dt = now1.strftime('%Y-%m-%dT%H:%M:%SZ')
+        after_dt = now - \
+            pd.Timedelta(now.strftime('%H:%M:%S')) - pd.Timedelta('1 minute')
+        after_dt = after_dt.strftime('%Y-%m-%dT%H:%M:%SZ')
+        print("after_dt -{}, until_dt - {}".format(after_dt, until_dt))
+        orders4mtoday = api.list_orders(status='all', after=after_dt,until=until_dt)
+        print("orders4mtoday - {}".format(orders4mtoday))
+        order_symbols = set()
+        for o in orders4mtoday:
+            order_symbols.add(o.symbol)
+
+        return order_symbols
+
+    except Exception as e:
+        logger.error(e)        
