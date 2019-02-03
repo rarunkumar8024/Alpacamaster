@@ -252,7 +252,7 @@ def main():
     done = None
     #sold_today = {}
     todays_order = {}
-    test_flag = False
+    test_flag = True
     logging.info('start running')
     #set initial stop loss values for the stocks in the portfolio, just in case algo was had a problem and need to restart
     positions = api.list_positions()
