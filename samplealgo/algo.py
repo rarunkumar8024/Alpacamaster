@@ -364,7 +364,8 @@ def gettodaysorder():
             pd.Timedelta(now.strftime('%H:%M:%S')) - pd.Timedelta('1 minute')
         after_dt = after_dt.strftime('%Y-%m-%dT%H:%M:%SZ')
         print("after_dt -{}, until_dt - {}".format(after_dt, until_dt))
-        orders4mtoday = api.list_orders(status='all', after=after_dt) #,until=until_dt)
+        #orders4mtoday = api.list_orders(status='all', after=after_dt) #,until=until_dt)
+        orders4mtoday = api.list_orders(status='filled', after=after_dt) #,until=until_dt)
         print("orders4mtoday - {}".format(orders4mtoday))
         order_symbols = set()
         for o in orders4mtoday:
