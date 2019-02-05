@@ -21,7 +21,7 @@ api = tradeapi.REST()
 stopprice = {}
 lossfactor = 0.95
 orders = []
-MaxCandidates = 25
+MaxCandidates = 100
 
 def _dry_run_submit(*args, **kwargs):
     logging.info(f'submit({args}, {kwargs})')
@@ -94,7 +94,7 @@ def calc_scores(price_map, dayindex=-1):
     return sorted(diffs.items(), key=lambda x: x[1])
 
 
-def get_orders(api, price_map, todays_order, position_size=100, max_positions=25):
+def get_orders(api, price_map, todays_order, position_size=5, max_positions=25):
     '''Calculate the scores with the universe to build the optimal
     portfolio as of today, and extract orders to transition from
     current portfolio to the calculated state.
@@ -156,6 +156,8 @@ def get_orders(api, price_map, todays_order, position_size=100, max_positions=25
         if max_to_buy <= 0:
             break
         currentprice = getcurrentprice(symbol)
+        if currentprice < cash:
+            continue
         max_shares = (cash /float (max (price_map[symbol].close.values[-1],currentprice)))
         
         print ("max_shares - {}".format(max_shares))
@@ -252,7 +254,7 @@ def main():
     done = None
     #sold_today = {}
     todays_order = {}
-    test_flag = True
+    test_flag = False
     logging.info('start running')
     #set initial stop loss values for the stocks in the portfolio, just in case algo was had a problem and need to restart
     positions = api.list_positions()
@@ -365,7 +367,7 @@ def gettodaysorder():
         after_dt = after_dt.strftime('%Y-%m-%dT%H:%M:%SZ')
         print("after_dt -{}, until_dt - {}".format(after_dt, until_dt))
         #orders4mtoday = api.list_orders(status='all', after=after_dt) #,until=until_dt)
-        orders4mtoday = api.list_orders(status='filled', after=after_dt) #,until=until_dt)
+        orders4mtoday = api.list_orders(status='all', after=after_dt) #,until=until_dt)
         print("orders4mtoday - {}".format(orders4mtoday))
         order_symbols = set()
         for o in orders4mtoday:
