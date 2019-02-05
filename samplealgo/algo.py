@@ -19,7 +19,7 @@ logging.basicConfig(level=logging.INFO)
 NY = 'America/New_York'
 api = tradeapi.REST()
 stopprice = {}
-failedorder = {}
+failedorder = set()
 lossfactor = 0.95
 orders = []
 MaxCandidates = 100
@@ -126,8 +126,8 @@ def get_orders(api, price_map, todays_order, position_size=5, max_positions=25):
     print("Todays order - {}".format(todays_order))
     if todays_order is None:
         todays_order = set()
-    if failedorder is None:
-        failedorder = set()
+    #if failedorder is None:
+    #    failedorder = set()
     
     #todays_order_array = {q.symbol for q in todays_order if (q['side'] == 'buy' or q['side'] == 'sell')}
     #print("Todays order array - {}".format(todays_order_array))
@@ -135,6 +135,7 @@ def get_orders(api, price_map, todays_order, position_size=5, max_positions=25):
     to_buy = to_buy - holding_symbol - todays_order - failedorder
 
     orders = []
+    print("Failed Order - {}".format(failedorder))
     print("Holding positions - {}".format(positions))
     print("To Sell - {}".format(to_sell))
 
@@ -233,7 +234,7 @@ def trade(orders, wait=30):
             set_stoploss(order['symbol']) 
         except Exception as e:
             if e.__eq__("insufficient buying power"):
-                failedorder.add = order['symbol']
+                failedorder.add(order['symbol'])
             logger.error(e)
     count = wait
     while count > 0:
@@ -293,7 +294,7 @@ def main():
         now = clock.timestamp
 
         if (clock.is_open and done != now.strftime('%Y-%m-%d')) or test_flag:
-            failedorder = {}
+            failedorder = set()
             todays_order = {}
             todays_order = gettodaysorder()
             price_map = prices(stocks_best)
