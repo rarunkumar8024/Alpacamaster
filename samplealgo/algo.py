@@ -156,7 +156,7 @@ def get_orders(api, price_map, todays_order, position_size=5, max_positions=25):
         if max_to_buy <= 0:
             break
         currentprice = getcurrentprice(symbol)
-        if currentprice < cash:
+        if currentprice > cash:
             continue
         max_shares = (cash /float (max (price_map[symbol].close.values[-1],currentprice)))
         
