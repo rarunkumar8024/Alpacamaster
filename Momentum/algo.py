@@ -364,7 +364,7 @@ def run_ws(conn, channels):
         run_ws(conn, channels)
 
 
-if __name__ == "__main__":
+def main():
     # Get when the market opens or opened today
     nyc = timezone('America/New_York')
     today = datetime.today().astimezone(nyc)

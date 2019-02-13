@@ -1,4 +1,5 @@
-from samplealgo import algo, btest
+#from samplealgo import algo, btest
+from momentum import algo
 
 if __name__ == '__main__':
     algo.main()
