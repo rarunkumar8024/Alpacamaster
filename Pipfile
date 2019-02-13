@@ -5,7 +5,7 @@ name = "pypi"
 
 [packages]
 pip = "==19.0.1"
-alpaca-trade-api = "==0.24"
+alpaca-trade-api = "==0.25"
 pipeline-live = "==0.1.4"
 
 [dev-packages]
