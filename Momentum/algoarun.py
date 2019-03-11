@@ -302,10 +302,7 @@ def run(tickers, market_open_dt, market_close_dt):
                 if shares_to_buy <= 0 or (float(api.get_account().cash) <= data.close):
                     #print("skipping the buy for {}, at the price -{} with portfolio avl cash - {}".format(
                     #    symbol,data.close,float(api.get_account().cash)))
-                    print("symbol - {}, close price - {}, stop_price - {}, target_price - {}".format(
-                    symbol, data.close, stop_prices[symbol], target_prices[symbol]))
                     return
-
                 print('Submitting buy for {} shares of {} at {}'.format(
                     shares_to_buy, symbol, data.close
                 ))
