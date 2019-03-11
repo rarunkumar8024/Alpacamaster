@@ -1,6 +1,6 @@
 #from samplealgo import algo, btest
-from Momentum import algo
+from Momentum import algoarun
 
 if __name__ == '__main__':
-    algo.main()
+    algoarun.main()
     #btest.simulate

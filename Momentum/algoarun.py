@@ -12,8 +12,6 @@ from pytz import timezone
 #api_secret = 'Your API Secret'
 
 api = tradeapi.REST()
-    
-
 session = requests.session()
 
 # We only consider stocks with per-share prices inside this range
@@ -25,7 +23,9 @@ min_last_dv = 500000
 default_stop = .95
 # How much of our portfolio to allocate to any one position
 risk = 0.001
-
+stop_prices = {}
+latest_cost_basis = {}
+target_prices = {}
 
 def get_1000m_history_data(symbols):
     print('Getting historical data...')
@@ -69,7 +69,7 @@ def find_stop(current_value, minute_history, now):
     series = minute_history['low'][-100:] \
                 .dropna().resample('5min').min()
     series = series[now.floor('1D'):]
-    diff = np.diff(series.values)
+    diff = np.nan_to_num(np.diff(series.values))
     low_index = np.where((diff[:-1] <= 0) & (diff[1:] > 0))[0] + 1
     if len(low_index) > 0:
         return series[low_index[-1]] - 0.01
@@ -90,6 +90,7 @@ def run(tickers, market_open_dt, market_close_dt):
 
     symbols = [ticker.ticker for ticker in tickers]
     print('Tracking {} symbols.'.format(len(symbols)))
+    print('Symbols - {}'.format(symbols))
     minute_history = get_1000m_history_data(symbols)
 
     portfolio_value = float(api.get_account().portfolio_value)
@@ -116,10 +117,14 @@ def run(tickers, market_open_dt, market_close_dt):
             stop_prices[position.symbol] = (
                 float(position.cost_basis) * default_stop
             )
+            target_prices[position.symbol] = portfolio_value
+            print("Existing position - {}, with stop_prices -{}".format(position.symbol,stop_prices[position.symbol]))
+            
 
     # Keep track of what we're buying/selling
-    target_prices = {}
+    
     partial_fills = {}
+    #find_stop_loss = {}
 
     # Use trade updates to keep track of our portfolio
     @conn.on(r'trade_update')
@@ -132,6 +137,14 @@ def run(tickers, market_open_dt, market_close_dt):
                 qty = data.order['filled_qty']
                 if data.order['side'] == 'sell':
                     qty = qty * -1
+                if data.order['side'] == 'buy':
+                    stop_price = find_stop(
+                    data.close, minute_history[symbol], ts
+                    )
+                    stop_prices[symbol] = stop_price
+                    target_prices[symbol] = data.close + (
+                    (data.close - stop_price) * 3
+                    )
                 positions[symbol] = (
                     positions.get(symbol, 0) - partial_fills.get(symbol, 0)
                 )
@@ -142,11 +155,21 @@ def run(tickers, market_open_dt, market_close_dt):
                 qty = data.order['filled_qty']
                 if data.order['side'] == 'sell':
                     qty = qty * -1
+                if data.order['side'] == 'buy':
+                    stop_price = find_stop(
+                    data.close, minute_history[symbol], ts
+                    )
+                    stop_prices[symbol] = stop_price
+                    target_prices[symbol] = data.close + (
+                    (data.close - stop_price) * 3
+                    )  
                 positions[symbol] = (
                     positions.get(symbol, 0) - partial_fills.get(symbol, 0)
                 )
                 partial_fills[symbol] = 0
                 positions[symbol] += qty
+                if positions[symbol] == 0:
+                    removeconn(symbols, symbol, conn)
                 open_orders[symbol] = None
             elif event == 'canceled' or event == 'rejected':
                 partial_fills[symbol] = 0
@@ -160,6 +183,9 @@ def run(tickers, market_open_dt, market_close_dt):
         # First, aggregate 1s bars for up-to-date MACD calculations
         ts = data.start
         ts -= timedelta(seconds=ts.second, microseconds=ts.microsecond)
+        since_market_open = ts - market_open_dt
+        until_market_close = market_close_dt - ts
+
         try:
             current = minute_history[data.symbol].loc[ts]
         except KeyError:
@@ -199,22 +225,19 @@ def run(tickers, market_open_dt, market_close_dt):
         position = positions.get(symbol, 0)
         if position > 0:
             # Update stop price and target price
-            stop_price = find_stop(
-            data.close, minute_history[symbol], ts
-            )
-            stop_prices[symbol] = stop_price
-            target_prices[symbol] = data.close + (
-            (data.close - stop_price) * 3
-            )
+            stoplossprice = float (default_stop * data.close)
+            if stoplossprice > stop_prices[symbol]:
+                stop_prices[symbol] = stoplossprice
+            
             print("symbol - {}, close price - {}, stop_price - {}, target_price - {}".format(
             symbol, data.close, stop_prices[symbol], target_prices[symbol]))    
         
         # Now we check to see if it might be time to buy or sell
-        since_market_open = ts - market_open_dt
-        until_market_close = market_close_dt - ts
+        
         if (
-            since_market_open.seconds // 60 > 15 and
-            since_market_open.seconds // 60 < 60
+            since_market_open.seconds // 60 > 15 
+            #and
+            #since_market_open.seconds // 60 < 60
         ):
             # Check for buy signals
 
@@ -278,7 +301,9 @@ def run(tickers, market_open_dt, market_close_dt):
                 if shares_to_buy == 0:
                     shares_to_buy = 1
                 shares_to_buy -= positions.get(symbol, 0)
-                if shares_to_buy <= 0:
+                if shares_to_buy <= 0 or (float(api.get_account().cash) <= data.close):
+                    #print("skipping the buy for {}, at the price -{} with portfolio avl cash - {}".format(
+                    #    symbol,data.close,float(api.get_account().cash)))
                     return
 
                 print('Submitting buy for {} shares of {} at {}'.format(
@@ -296,8 +321,9 @@ def run(tickers, market_open_dt, market_close_dt):
                     print(e)
                 return
         if(
-            since_market_open.seconds // 60 >= 24 and
-            until_market_close.seconds // 60 > 15
+            since_market_open.seconds // 60 >= 24 
+            #and
+            #until_market_close.seconds // 60 > 15
         ):
             # Check for liquidation signals
 
@@ -333,30 +359,6 @@ def run(tickers, market_open_dt, market_close_dt):
                 except Exception as e:
                     print(e)
             return
-        elif (
-            until_market_close.seconds // 60 <= 15
-        ):
-            # Liquidate remaining positions on watched symbols at market
-            try:
-                position = api.get_position(symbol)
-            except Exception as e:
-                # Exception here indicates that we have no position
-                return
-            print('Trading over, liquidating remaining position in {}'.format(
-                symbol)
-            )
-            api.submit_order(
-                symbol=symbol, qty=position.qty, side='sell',
-                type='market', time_in_force='day'
-            )
-            symbols.remove(symbol)
-            if len(symbols) <= 0:
-                conn.close()
-            conn.deregister([
-                'A.{}'.format(symbol),
-                'AM.{}'.format(symbol)
-            ])
-
     # Replace aggregated 1s bars with incoming 1m bars
     @conn.on(r'AM\..*')
     async def handle_minute_bar(conn, channel, data):
@@ -378,6 +380,20 @@ def run(tickers, market_open_dt, market_close_dt):
     print('Watching {} symbols.'.format(len(symbols)))
     run_ws(conn, channels)
 
+def removeconn(symbols, symbol, conn):
+    try:
+        symbols.remove(symbol)
+        stop_prices.remove(symbol)
+        latest_cost_basis.remove(symbol)
+        target_prices.remove(symbol)
+        if len(symbols) <= 0:
+            conn.close()
+        conn.deregister([
+            'A.{}'.format(symbol),
+            'AM.{}'.format(symbol)
+        ])
+    except Exception as e:
+        print(e)
 
 # Handle failed websocket connections by reconnecting
 def run_ws(conn, channels):
@@ -417,3 +433,15 @@ def main():
         since_market_open = current_dt - market_open
 
     run(get_tickers(), market_open, market_close)
+
+def trailingstoploss(symbol,marketprice):
+    try:
+        #marketprice = getcurrentprice(symbol)
+        stoplossprice = float (default_stop * marketprice)
+        print("trailingstop loss - symbol - {}".format(symbol))
+        print("stop price - {}".format(stop_prices[symbol]))
+        if stoplossprice > stop_prices[symbol]:
+            stop_prices[symbol] = stoplossprice
+            print("stoploss value updated stoploss - {}, current price - {}".format(stop_prices[symbol],marketprice))
+    except Exception as e:
+        logger.error(e)
