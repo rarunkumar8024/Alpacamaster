@@ -244,7 +244,33 @@ def run(tickers, market_open_dt, market_close_dt):
             # See if we've already bought in first
             position = positions.get(symbol, 0)
             if position > 0:
-                return
+                # Sell for a loss if it's fallen below our stop price
+                # Sell for a loss if it's below our cost basis and MACD < 0
+                # Sell for a profit if it's above our target price
+                hist = macd(
+                    minute_history[symbol]['close'].dropna(),
+                    n_fast=13,
+                    n_slow=21
+                )
+                if (
+                    data.close <= stop_prices[symbol] or
+                    (data.close >= target_prices[symbol] and hist[-1] <= 0) or
+                    (data.close <= latest_cost_basis[symbol] and hist[-1] <= 0)
+                ):
+                    print('Submitting sell for {} shares of {} at {}'.format(
+                        position, symbol, data.close
+                    ))
+                    try:
+                        o = api.submit_order(
+                        symbol=symbol, qty=str(position), side='sell',
+                        type='limit', time_in_force='day',
+                        limit_price=str(data.close)
+                        )
+                        open_orders[symbol] = o
+                        latest_cost_basis[symbol] = data.close
+                    except Exception as e:
+                        print(e)
+                    return
 
             # See how high the price went during the first 15 minutes
             lbound = market_open_dt
@@ -317,45 +343,7 @@ def run(tickers, market_open_dt, market_close_dt):
                 except Exception as e:
                     print(e)
                 return
-        if(
-            since_market_open.seconds // 60 >= 24 
-            #and
-            #until_market_close.seconds // 60 > 15
-        ):
-            # Check for liquidation signals
-
-            # We can't liquidate if there's no position
-            position = positions.get(symbol, 0)
-            if position == 0:
-                return
-
-            # Sell for a loss if it's fallen below our stop price
-            # Sell for a loss if it's below our cost basis and MACD < 0
-            # Sell for a profit if it's above our target price
-            hist = macd(
-                minute_history[symbol]['close'].dropna(),
-                n_fast=13,
-                n_slow=21
-            )
-            if (
-                data.close <= stop_prices[symbol] or
-                (data.close >= target_prices[symbol] and hist[-1] <= 0) or
-                (data.close <= latest_cost_basis[symbol] and hist[-1] <= 0)
-            ):
-                print('Submitting sell for {} shares of {} at {}'.format(
-                    position, symbol, data.close
-                ))
-                try:
-                    o = api.submit_order(
-                        symbol=symbol, qty=str(position), side='sell',
-                        type='limit', time_in_force='day',
-                        limit_price=str(data.close)
-                    )
-                    open_orders[symbol] = o
-                    latest_cost_basis[symbol] = data.close
-                except Exception as e:
-                    print(e)
-            return
+            
     # Replace aggregated 1s bars with incoming 1m bars
     @conn.on(r'AM\..*')
     async def handle_minute_bar(conn, channel, data):
