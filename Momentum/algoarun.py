@@ -395,8 +395,9 @@ def main():
     while True:
 
         clock = api.get_clock()
+        print ("clock - {}".format(clock))
         if clock.is_open:
-
+            print ("Inside clock.is open")
             nyc = timezone('America/New_York')
             today = datetime.today().astimezone(nyc)
             today_str = datetime.today().astimezone(nyc).strftime('%Y-%m-%d')
@@ -424,6 +425,8 @@ def main():
 
             run(get_tickers(), market_open, market_close)
         time.sleep(60)  
+        if clock.is_open == False:
+            print("closed")
 
 
 
