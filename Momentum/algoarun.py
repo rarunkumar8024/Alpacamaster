@@ -270,7 +270,7 @@ def run(tickers, market_open_dt, market_close_dt):
                         latest_cost_basis[symbol] = data.close
                     except Exception as e:
                         print(e)
-                    return
+                return
 
             # See how high the price went during the first 15 minutes
             lbound = market_open_dt
