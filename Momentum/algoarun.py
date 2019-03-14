@@ -423,6 +423,7 @@ def main():
                 since_market_open = current_dt - market_open
 
             run(get_tickers(), market_open, market_close)
+        time.sleep(60)  
 
 
 
