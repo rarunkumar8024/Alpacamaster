@@ -179,7 +179,7 @@ def run(tickers, market_open_dt, market_close_dt):
     async def handle_second_bar(conn, channel, data):
         #print("inside handle_second_bar")
         symbol = data.symbol
-
+    
         # First, aggregate 1s bars for up-to-date MACD calculations
         ts = data.start
         ts -= timedelta(seconds=ts.second, microseconds=ts.microsecond)
@@ -392,32 +392,40 @@ def run_ws(conn, channels):
 
 def main():
     # Get when the market opens or opened today
-    nyc = timezone('America/New_York')
-    today = datetime.today().astimezone(nyc)
-    today_str = datetime.today().astimezone(nyc).strftime('%Y-%m-%d')
-    calendar = api.get_calendar(start=today_str, end=today_str)[0]
-    market_open = today.replace(
-        hour=calendar.open.hour,
-        minute=calendar.open.minute,
-        second=0
-    )
-    market_open = market_open.astimezone(nyc)
-    market_close = today.replace(
-        hour=calendar.close.hour,
-        minute=calendar.close.minute,
-        second=0
-    )
-    market_close = market_close.astimezone(nyc)
-    
-    # Wait until just before we might want to trade
-    current_dt = datetime.today().astimezone(nyc)
-    since_market_open = current_dt - market_open
-    
-    while since_market_open.seconds // 60 <= 14:
-        time.sleep(1)
-        since_market_open = current_dt - market_open
+    while True:
 
-    run(get_tickers(), market_open, market_close)
+        clock = api.get_clock()
+        if clock.is_open:
+
+            nyc = timezone('America/New_York')
+            today = datetime.today().astimezone(nyc)
+            today_str = datetime.today().astimezone(nyc).strftime('%Y-%m-%d')
+            calendar = api.get_calendar(start=today_str, end=today_str)[0]
+            market_open = today.replace(
+                    hour=calendar.open.hour,
+                minute=calendar.open.minute,
+                second=0
+            )
+            market_open = market_open.astimezone(nyc)
+            market_close = today.replace(
+                hour=calendar.close.hour,
+                minute=calendar.close.minute,
+                second=0
+            )
+            market_close = market_close.astimezone(nyc)
+            
+            # Wait until just before we might want to trade
+            current_dt = datetime.today().astimezone(nyc)
+            since_market_open = current_dt - market_open
+            
+            while since_market_open.seconds // 60 <= 14:
+                time.sleep(1)
+                since_market_open = current_dt - market_open
+
+            run(get_tickers(), market_open, market_close)
+
+
+
 
 def trailingstoploss(symbol,marketprice):
     try:
