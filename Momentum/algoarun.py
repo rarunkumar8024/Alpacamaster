@@ -224,8 +224,7 @@ def run(tickers, market_open_dt, market_close_dt):
                 api.cancel_order(existing_order.id)
             return
         
-        #position = positions.get(symbol, 0)
-        position = api.get_position(symbol)
+        position = positions.get(symbol, 0)
         if position > 0:
             # Update stop price and target price
             stoplossprice = float (default_stop * data.close)
@@ -234,6 +233,12 @@ def run(tickers, market_open_dt, market_close_dt):
             
             print("symbol - {}, close price - {}, stop_price - {}, stoploss - {}, target_price - {}".format(
             symbol, data.close, stop_prices[symbol], stoplossprice, target_prices[symbol]))    
+            try:
+                if api.get_position(symbol) > 0:
+                    continue
+            except Exception as e:
+                    print(e)
+                    removeconn(symbols, symbol, conn)
         
         # Now we check to see if it might be time to buy or sell
         
