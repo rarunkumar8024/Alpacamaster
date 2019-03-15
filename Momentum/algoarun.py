@@ -224,7 +224,8 @@ def run(tickers, market_open_dt, market_close_dt):
                 api.cancel_order(existing_order.id)
             return
         
-        position = positions.get(symbol, 0)
+        #position = positions.get(symbol, 0)
+        position = api.get_position(symbol)
         if position > 0:
             # Update stop price and target price
             stoplossprice = float (default_stop * data.close)
@@ -259,9 +260,10 @@ def run(tickers, market_open_dt, market_close_dt):
                     (data.close >= target_prices[symbol] and hist[-1] <= 0) or
                     (data.close <= latest_cost_basis[symbol] and hist[-1] <= 0)
                 ):
-                    print('Submitting sell for {} shares of {} at {}'.format(
-                        position, symbol, data.close
+                    print('Submitting sell for {} shares of {} at {}, stop_price - {}, hist[-1] - {}, target_prices - {}, costbasis - {}'.format(
+                        position, symbol, data.close, stop_prices[symbol], hist[-1], target_prices[symbol], latest_cost_basis[symbol]
                     ))
+                    print("stop_price ")
                     try:
                         o = api.submit_order(
                         symbol=symbol, qty=str(position), side='sell',
