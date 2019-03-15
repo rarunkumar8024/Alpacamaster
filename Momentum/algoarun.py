@@ -359,8 +359,10 @@ def run(tickers, market_open_dt, market_close_dt):
                 except Exception as e:
                     print(e)
                     if e.__eq__("insufficient buying power"):
-                        del open_orders[symbol]
-                        del latest_cost_basis[symbol]
+                        if open_order.get(symbol,0) >= 0:
+                            del open_orders[symbol]
+                        if latest_cost_basis.get(symbol,0) >= 0:
+                            del latest_cost_basis[symbol]
                 return
             
     # Replace aggregated 1s bars with incoming 1m bars
