@@ -27,6 +27,9 @@ stop_prices = {}
 latest_cost_basis = {}
 target_prices = {}
 
+# Establish streaming connection
+conn = tradeapi.StreamConn() #key_id=api_key_id, secret_key=api_secret)
+
 def get_1000m_history_data(symbols):
     print('Getting historical data...')
     minute_history = {}
@@ -77,8 +80,7 @@ def find_stop(current_value, minute_history, now):
 
 
 def run(tickers, market_open_dt, market_close_dt):
-    # Establish streaming connection
-    conn = tradeapi.StreamConn() #key_id=api_key_id, secret_key=api_secret)
+    
 
     # Update initial state with information from tickers
     volume_today = {}
@@ -134,6 +136,7 @@ def run(tickers, market_open_dt, market_close_dt):
         if last_order is not None:
             event = data.event
             if event == 'partial_fill':
+                print("Inside trade_update routine - partial fill")
                 qty = data.order['filled_qty']
                 if data.order['side'] == 'sell':
                     qty = qty * -1
@@ -152,6 +155,7 @@ def run(tickers, market_open_dt, market_close_dt):
                 positions[symbol] += qty
                 open_orders[symbol] = data.order
             elif event == 'filled':
+                print("Inside trade_update routine - filled")
                 qty = data.order['filled_qty']
                 if data.order['side'] == 'sell':
                     qty = qty * -1
@@ -174,6 +178,7 @@ def run(tickers, market_open_dt, market_close_dt):
                     removeconn(symbols, symbol, conn)
                 open_orders[symbol] = None
             elif event == 'canceled' or event == 'rejected':
+                print("Inside trade_update routine - cancelled or rejected")
                 partial_fills[symbol] = 0
                 open_orders[symbol] = None
 
@@ -353,6 +358,9 @@ def run(tickers, market_open_dt, market_close_dt):
                     latest_cost_basis[symbol] = data.close
                 except Exception as e:
                     print(e)
+                    if e.__eq__("insufficient buying power"):
+                        del open_orders[symbol]
+                        del latest_cost_basis[symbol]
                 return
             
     # Replace aggregated 1s bars with incoming 1m bars
@@ -386,14 +394,14 @@ def removeconn(symbols, symbol, conn):
             del latest_cost_basis[symbol]
         if target_prices.get(symbol,0) >= 0:
             del target_prices.remove[symbol]
-        if symbol in symbols:
-            symbols.remove(symbol)
-        if len(symbols) <= 0:
-            conn.close()
-        conn.deregister([
-            'A.{}'.format(symbol),
-            'AM.{}'.format(symbol)
-        ])
+        #if symbol in symbols:
+        #    symbols.remove(symbol)
+        #if len(symbols) <= 0:
+        #    conn.close()
+        #conn.deregister([
+        #    'A.{}'.format(symbol),
+        #    'AM.{}'.format(symbol)
+        #])
     except Exception as e:
         print(e)
 
@@ -410,7 +418,7 @@ def run_ws(conn, channels):
 def main():
     # Get when the market opens or opened today
     while True:
-
+        
         clock = api.get_clock()
         #print ("clock - {}".format(clock))
         if clock.is_open:
@@ -443,6 +451,7 @@ def main():
             run(get_tickers(), market_open, market_close)
         time.sleep(60)  
         if clock.is_open == False:
+            conn.close
             print("closed")
 
 
