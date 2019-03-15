@@ -239,7 +239,8 @@ def run(tickers, market_open_dt, market_close_dt):
                     removeconn(symbols, symbol, conn)
             except Exception as e:
                     print(e)
-                    removeconn(symbols, symbol, conn)
+                    if e.__eq__("position does not exist"):
+                        removeconn(symbols, symbol, conn)
         
         # Now we check to see if it might be time to buy or sell
         
@@ -380,11 +381,11 @@ def removeconn(symbols, symbol, conn):
     try:
         
         if stop_prices.get(symbol,0) >= 0:
-            stop_prices.remove(symbol)
+            del stop_prices[symbol]
         if latest_cost_basis.get(symbol,0) >= 0:
-            latest_cost_basis.remove(symbol)
+            del latest_cost_basis[symbol]
         if target_prices.get(symbol,0) >= 0:
-            target_prices.remove(symbol)
+            del target_prices.remove[symbol]
         if symbol in symbols:
             symbols.remove(symbol)
         if len(symbols) <= 0:
