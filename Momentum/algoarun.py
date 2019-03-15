@@ -360,7 +360,7 @@ def run(tickers, market_open_dt, market_close_dt):
         ]
         volume_today[data.symbol] += data.volume
 
-    channels = ['trade_updates']
+    channels = ['trade_update']
     for symbol in symbols:
         symbol_channels = ['A.{}'.format(symbol), 'AM.{}'.format(symbol)]
         channels += symbol_channels
