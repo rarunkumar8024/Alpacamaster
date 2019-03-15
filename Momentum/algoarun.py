@@ -163,6 +163,8 @@ def run(tickers, market_open_dt, market_close_dt):
                     target_prices[symbol] = data.close + (
                     (data.close - stop_price) * 3
                     )  
+                    print("Trade updates Buy symbol - {}, close price - {}, stop_price - {}, target_price - {}".format(
+                    symbol, data.close, stop_prices[symbol], target_prices[symbol]))    
                 positions[symbol] = (
                     positions.get(symbol, 0) - partial_fills.get(symbol, 0)
                 )
@@ -229,8 +231,8 @@ def run(tickers, market_open_dt, market_close_dt):
             if stoplossprice > stop_prices[symbol]:
                 stop_prices[symbol] = stoplossprice
             
-            print("symbol - {}, close price - {}, stop_price - {}, target_price - {}".format(
-            symbol, data.close, stop_prices[symbol], target_prices[symbol]))    
+            print("symbol - {}, close price - {}, stop_price - {}, stoploss - {}, target_price - {}".format(
+            symbol, data.close, stop_prices[symbol], stoplossprice, target_prices[symbol]))    
         
         # Now we check to see if it might be time to buy or sell
         
@@ -363,6 +365,7 @@ def run(tickers, market_open_dt, market_close_dt):
         symbol_channels = ['A.{}'.format(symbol), 'AM.{}'.format(symbol)]
         channels += symbol_channels
     print('Watching {} symbols.'.format(len(symbols)))
+    print("Channels - {}".format(channels))
     run_ws(conn, channels)
 
 def removeconn(symbols, symbol, conn):
@@ -395,9 +398,9 @@ def main():
     while True:
 
         clock = api.get_clock()
-        print ("clock - {}".format(clock))
+        #print ("clock - {}".format(clock))
         if clock.is_open:
-            print ("Inside clock.is open")
+        #    print ("Inside clock.is open")
             nyc = timezone('America/New_York')
             today = datetime.today().astimezone(nyc)
             today_str = datetime.today().astimezone(nyc).strftime('%Y-%m-%d')
