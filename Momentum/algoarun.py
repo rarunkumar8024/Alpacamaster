@@ -234,8 +234,9 @@ def run(tickers, market_open_dt, market_close_dt):
             print("symbol - {}, close price - {}, stop_price - {}, stoploss - {}, target_price - {}".format(
             symbol, data.close, stop_prices[symbol], stoplossprice, target_prices[symbol]))    
             try:
-                if api.get_position(symbol) > 0:
-                    continue
+                if int(api.get_position(symbol).qty) <= 0:
+                    print("Position {} for symbol - {}".fomat(api.get_position(symbol).qty,symbol))
+                    removeconn(symbols, symbol, conn)
             except Exception as e:
                     print(e)
                     removeconn(symbols, symbol, conn)
@@ -377,10 +378,15 @@ def run(tickers, market_open_dt, market_close_dt):
 
 def removeconn(symbols, symbol, conn):
     try:
-        symbols.remove(symbol)
-        stop_prices.remove(symbol)
-        latest_cost_basis.remove(symbol)
-        target_prices.remove(symbol)
+        
+        if stop_prices.get(symbol,0) >= 0:
+            stop_prices.remove(symbol)
+        if latest_cost_basis.get(symbol,0) >= 0:
+            latest_cost_basis.remove(symbol)
+        if target_prices.get(symbol,0) >= 0:
+            target_prices.remove(symbol)
+        if symbol in symbols:
+            symbols.remove(symbol)
         if len(symbols) <= 0:
             conn.close()
         conn.deregister([
