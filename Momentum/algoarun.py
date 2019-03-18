@@ -345,8 +345,8 @@ def run(tickers, market_open_dt, market_close_dt):
                     #print("skipping the buy for {}, at the price -{} with portfolio avl cash - {}".format(
                     #    symbol,data.close,float(api.get_account().cash)))
                     return
-                print('Submitting buy for {} shares of {} at {}'.format(
-                    shares_to_buy, symbol, data.close
+                print('Submitting buy for {} shares of {} at {}, with set stop price - {} and Target price - {}'.format(
+                    shares_to_buy, symbol, data.close, stop_prices[symbol], target_prices[symbol]
                 ))
                 try:
                     o = api.submit_order(
