@@ -129,7 +129,7 @@ def run(tickers, market_open_dt, market_close_dt):
     #find_stop_loss = {}
 
     # Use trade updates to keep track of our portfolio
-    @conn.on(r'trade_update')
+    @conn.on(r'trade_updates')
     async def handle_trade_update(conn, channel, data):
         symbol = data.order['symbol']
         last_order = open_orders.get(symbol)
@@ -380,7 +380,7 @@ def run(tickers, market_open_dt, market_close_dt):
         ]
         volume_today[data.symbol] += data.volume
 
-    channels = ['trade_update']
+    channels = ['trade_updates']
     for symbol in symbols:
         symbol_channels = ['A.{}'.format(symbol), 'AM.{}'.format(symbol)]
         channels += symbol_channels
