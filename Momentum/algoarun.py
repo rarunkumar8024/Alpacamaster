@@ -419,12 +419,14 @@ def run_ws(conn, channels):
 
 
 def main():
+    done = None
     # Get when the market opens or opened today
     while True:
         
         clock = api.get_clock()
-        #print ("clock - {}".format(clock))
-        if clock.is_open:
+        now = clock.timestamp
+        print ("done - {}, clock - {}".format(done, clock))
+        if (clock.is_open and done != now.strftime('%Y-%m-%d')):
         #    print ("Inside clock.is open")
             nyc = timezone('America/New_York')
             today = datetime.today().astimezone(nyc)
@@ -452,13 +454,14 @@ def main():
                 since_market_open = current_dt - market_open
 
             run(get_tickers(), market_open, market_close)
-        time.sleep(60)  
-        if clock.is_open == False:
+            done = now.strftime('%Y-%m-%d')
+        time.sleep(60)
+        #print("done - {}".format(done))  
+        if clock.is_open == False and done == now.strftime('%Y-%m-%d'):
             conn.close
             print("closed")
-
-
-
+            done = None
+            time.sleep(54000)
 
 def trailingstoploss(symbol,marketprice):
     try:
