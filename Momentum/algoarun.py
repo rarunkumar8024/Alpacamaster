@@ -128,7 +128,7 @@ def run(tickers, market_open_dt, market_close_dt):
     #find_stop_loss = {}
 
     # Establish streaming connection
-    conn = tradeapi.StreamConn() #key_id=api_key_id, secret_key=api_secret)
+    conn = tradeapi.stream2.StreamConn() #key_id=api_key_id, secret_key=api_secret)
     
     channels = ['trade_updates']
     for symbol in symbols:
