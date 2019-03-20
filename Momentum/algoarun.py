@@ -27,8 +27,7 @@ stop_prices = {}
 latest_cost_basis = {}
 target_prices = {}
 
-# Establish streaming connection
-conn = tradeapi.StreamConn() #key_id=api_key_id, secret_key=api_secret)
+
 
 def get_1000m_history_data(symbols):
     print('Getting historical data...')
@@ -127,6 +126,19 @@ def run(tickers, market_open_dt, market_close_dt):
     
     partial_fills = {}
     #find_stop_loss = {}
+
+    # Establish streaming connection
+    conn = tradeapi.StreamConn() #key_id=api_key_id, secret_key=api_secret)
+    
+    channels = ['trade_updates']
+    for symbol in symbols:
+        symbol_channels = ['A.{}'.format(symbol), 'AM.{}'.format(symbol)]
+        channels += symbol_channels
+    
+    print('Watching {} symbols.'.format(len(symbols)))
+    print("Channels - {}".format(channels))
+    #conn.register(channels,run)
+    run_ws(conn, channels)
 
     # Use trade updates to keep track of our portfolio
     @conn.on(r'trade_updates')
@@ -247,12 +259,21 @@ def run(tickers, market_open_dt, market_close_dt):
                     if e.__eq__("position does not exist"):
                         removeconn(symbols, symbol, conn)
         
+        if  until_market_close.seconds // 60 < 1:
+            symbols.remove(symbol)
+            conn.deregister([
+                'A.{}'.format(symbol),
+                'AM.{}'.format(symbol)
+            ])
+            if len(symbols) <= 0:
+                conn.close()
         # Now we check to see if it might be time to buy or sell
         
         if (
             since_market_open.seconds // 60 > 15 
-            #and
+            and
             #since_market_open.seconds // 60 < 60
+            until_market_close.seconds // 60 > 1
         ):
             # Check for buy signals
 
@@ -365,6 +386,9 @@ def run(tickers, market_open_dt, market_close_dt):
                             del latest_cost_basis[symbol]
                     '''
                 return
+        
+            
+
             
     # Replace aggregated 1s bars with incoming 1m bars
     @conn.on(r'AM\..*')
@@ -380,13 +404,7 @@ def run(tickers, market_open_dt, market_close_dt):
         ]
         volume_today[data.symbol] += data.volume
 
-    channels = ['trade_updates']
-    for symbol in symbols:
-        symbol_channels = ['A.{}'.format(symbol), 'AM.{}'.format(symbol)]
-        channels += symbol_channels
-    print('Watching {} symbols.'.format(len(symbols)))
-    print("Channels - {}".format(channels))
-    run_ws(conn, channels)
+
 
 def removeconn(symbols, symbol, conn):
     try:
@@ -419,49 +437,51 @@ def run_ws(conn, channels):
 
 
 def main():
-    done = None
+#    done = None
     # Get when the market opens or opened today
     while True:
-        
-        clock = api.get_clock()
-        now = clock.timestamp
-        print ("done - {}, clock - {}".format(done, clock))
-        if (clock.is_open and done != now.strftime('%Y-%m-%d')):
-        #    print ("Inside clock.is open")
-            nyc = timezone('America/New_York')
-            today = datetime.today().astimezone(nyc)
-            today_str = datetime.today().astimezone(nyc).strftime('%Y-%m-%d')
-            calendar = api.get_calendar(start=today_str, end=today_str)[0]
-            market_open = today.replace(
-                    hour=calendar.open.hour,
+       
+#       clock = api.get_clock()
+#        now = clock.timestamp
+#        print ("done - {}, clock - {}".format(done, clock))
+#        if (clock.is_open and done != now.strftime('%Y-%m-%d')):
+#        #    print ("Inside clock.is open")
+
+        nyc = timezone('America/New_York')
+        today = datetime.today().astimezone(nyc)
+        today_str = datetime.today().astimezone(nyc).strftime('%Y-%m-%d')
+        calendar = api.get_calendar(start=today_str, end=today_str)[0]
+        market_open = today.replace(
+                hour=calendar.open.hour,
                 minute=calendar.open.minute,
                 second=0
-            )
-            market_open = market_open.astimezone(nyc)
-            market_close = today.replace(
+        )    
+        market_open = market_open.astimezone(nyc)
+        market_close = today.replace(
                 hour=calendar.close.hour,
                 minute=calendar.close.minute,
                 second=0
-            )
-            market_close = market_close.astimezone(nyc)
+        )
+        market_close = market_close.astimezone(nyc)
             
             # Wait until just before we might want to trade
-            current_dt = datetime.today().astimezone(nyc)
-            since_market_open = current_dt - market_open
+        current_dt = datetime.today().astimezone(nyc)
+        since_market_open = current_dt - market_open
             
-            while since_market_open.seconds // 60 <= 14:
-                time.sleep(1)
-                since_market_open = current_dt - market_open
+        while since_market_open.seconds // 60 <= 14:
+            time.sleep(1)
+        since_market_open = current_dt - market_open
 
-            run(get_tickers(), market_open, market_close)
-            done = now.strftime('%Y-%m-%d')
-        time.sleep(60)
+        run(get_tickers(), market_open, market_close)
+        #    done = now.strftime('%Y-%m-%d')
+        #time.sleep(60)
         #print("done - {}".format(done))  
-        if clock.is_open == False and done == now.strftime('%Y-%m-%d'):
+        '''if clock.is_open == False and done == now.strftime('%Y-%m-%d'):
             conn.close
             print("closed")
             done = None
             time.sleep(54000)
+        '''
 
 def trailingstoploss(symbol,marketprice):
     try:
