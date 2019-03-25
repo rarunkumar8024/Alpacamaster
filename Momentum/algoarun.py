@@ -317,8 +317,8 @@ def run(tickers, market_open_dt, market_close_dt):
                 data.close > high_15m and
                 volume_today[symbol] > 30000
             ):
-                if float (api.get_account.buying_power) < data.close:
-                    return
+                #if float (api.get_account.buying_power) < data.close:
+                #    return
                     
                 # check for a positive, increasing MACD
                 hist = macd(
