@@ -128,18 +128,9 @@ def run(tickers, market_open_dt, market_close_dt):
     #find_stop_loss = {}
 
     # Establish streaming connection
-    conn = tradeapi.stream2.StreamConn() #key_id=api_key_id, secret_key=api_secret)
+    #conn = tradeapi.stream2.StreamConn() #key_id=api_key_id, secret_key=api_secret)
+    conn = tradeapi.StreamConn() #key_id=api_key_id, secret_key=api_secret)
     
-    channels = ['trade_updates']
-    for symbol in symbols:
-        symbol_channels = ['A.{}'.format(symbol), 'AM.{}'.format(symbol)]
-        channels += symbol_channels
-    
-    print('Watching {} symbols.'.format(len(symbols)))
-    print("Channels - {}".format(channels))
-    #conn.register(channels,run)
-    run_ws(conn, channels)
-
     # Use trade updates to keep track of our portfolio
     @conn.on(r'trade_updates')
     async def handle_trade_update(conn, channel, data):
@@ -258,15 +249,12 @@ def run(tickers, market_open_dt, market_close_dt):
                     print(e)
                     if e.__eq__("position does not exist"):
                         removeconn(symbols, symbol, conn)
-        
+        print("Since Market Open - {}, until_market_close.seconds - {}".format(since_market_open.seconds, until_market_close.seconds))
         if  until_market_close.seconds // 60 < 1:
-            symbols.remove(symbol)
-            conn.deregister([
-                'A.{}'.format(symbol),
-                'AM.{}'.format(symbol)
-            ])
-            if len(symbols) <= 0:
-                conn.close()
+            print("Closing connections")
+            channels = []
+            run_ws(conn,channels)
+
         # Now we check to see if it might be time to buy or sell
         
         if (
@@ -386,9 +374,6 @@ def run(tickers, market_open_dt, market_close_dt):
                             del latest_cost_basis[symbol]
                     '''
                 return
-        
-            
-
             
     # Replace aggregated 1s bars with incoming 1m bars
     @conn.on(r'AM\..*')
@@ -403,7 +388,16 @@ def run(tickers, market_open_dt, market_close_dt):
             data.volume
         ]
         volume_today[data.symbol] += data.volume
-
+    
+    channels = ['trade_updates']
+    for symbol in symbols:
+        symbol_channels = ['A.{}'.format(symbol), 'AM.{}'.format(symbol)]
+        channels += symbol_channels
+    
+    print('Watching {} symbols.'.format(len(symbols)))
+    print("Channels - {}".format(channels))
+    #conn.register(channels,run)
+    run_ws(conn, channels)
 
 
 def removeconn(symbols, symbol, conn):
