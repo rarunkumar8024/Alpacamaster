@@ -232,7 +232,8 @@ def run(tickers, market_open_dt, market_close_dt):
                 api.cancel_order(existing_order.id)
             return
         
-        position = positions.get(symbol, 0)
+        #position = positions.get(symbol, 0)
+        position = api.get_position(symbol)
         if position > 0:
             # Update stop price and target price
             stoplossprice = float (default_stop * data.close)
