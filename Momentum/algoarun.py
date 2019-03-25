@@ -317,6 +317,9 @@ def run(tickers, market_open_dt, market_close_dt):
                 data.close > high_15m and
                 volume_today[symbol] > 30000
             ):
+                if float (api.get_account.buying_power) < data.close:
+                    return
+                    
                 # check for a positive, increasing MACD
                 hist = macd(
                     minute_history[symbol]['close'].dropna(),
@@ -335,7 +338,7 @@ def run(tickers, market_open_dt, market_close_dt):
                 )
                 if hist[-1] < 0 or np.diff(hist)[-1] < 0:
                     return
-
+                
                 # Stock has passed all checks; figure out how much to buy
                 stop_price = find_stop(
                     data.close, minute_history[symbol], ts
