@@ -233,24 +233,31 @@ def run(tickers, market_open_dt, market_close_dt):
             return
         
         #position = positions.get(symbol, 0)
-        position = int(api.get_position(symbol).qty)
-        if position > 0:
-            # Update stop price and target price
-            stoplossprice = float (default_stop * data.close)
-            if stoplossprice > stop_prices[symbol]:
-                stop_prices[symbol] = stoplossprice
-            
-            print("symbol - {}, close price - {}, stop_price - {}, stoploss - {}, target_price - {}".format(
-            symbol, data.close, stop_prices[symbol], stoplossprice, target_prices[symbol]))    
-            try:
-                if int(api.get_position(symbol).qty) <= 0:
-                    print("Position {} for symbol - {}".fomat(api.get_position(symbol).qty,symbol))
-                    removeconn(symbols, symbol, conn)
-            except Exception as e:
-                    print(e)
-                    if e.__eq__("position does not exist"):
+        try:
+            position = int(api.get_position(symbol).qty)
+            if position > 0:
+                # Update stop price and target price
+                stoplossprice = float (default_stop * data.close)
+                if stoplossprice > stop_prices[symbol]:
+                    stop_prices[symbol] = stoplossprice
+                
+                print("symbol - {}, close price - {}, stop_price - {}, stoploss - {}, target_price - {}".format(
+                symbol, data.close, stop_prices[symbol], stoplossprice, target_prices[symbol]))    
+                try:
+                    if int(api.get_position(symbol).qty) <= 0:
+                        print("Position {} for symbol - {}".fomat(api.get_position(symbol).qty,symbol))
                         removeconn(symbols, symbol, conn)
-        print("Since Market Open - {}, until_market_close.seconds - {}".format(since_market_open.seconds, until_market_close.seconds))
+                except Exception as e:
+                        #print(e)
+                        if e.__eq__("position does not exist"):
+                            removeconn(symbols, symbol, conn)
+                        if e.__ne__("position does not exist"):
+                            print(e)
+            print("Since Market Open - {}, until_market_close.seconds - {}".format(since_market_open.seconds, until_market_close.seconds))
+        except Exception as e:
+            if e.__ne__("position does not exist"):
+                print(e)
+
         if  until_market_close.seconds // 60 < 1:
             print("Closing connections")
             channels = []
@@ -267,36 +274,42 @@ def run(tickers, market_open_dt, market_close_dt):
             # Check for buy signals
 
             # See if we've already bought in first
-            position = positions.get(symbol, 0)
-            if position > 0:
-                # Sell for a loss if it's fallen below our stop price
-                # Sell for a loss if it's below our cost basis and MACD < 0
-                # Sell for a profit if it's above our target price
-                hist = macd(
-                    minute_history[symbol]['close'].dropna(),
-                    n_fast=13,
-                    n_slow=21
-                )
-                if (
-                    data.close <= stop_prices[symbol] or
-                    (data.close >= target_prices[symbol] and hist[-1] <= 0) or
-                    (data.close <= latest_cost_basis[symbol] and hist[-1] <= 0)
-                ):
-                    print('Submitting sell for {} shares of {} at {}, stop_price - {}, hist[-1] - {}, target_prices - {}, costbasis - {}'.format(
-                        position, symbol, data.close, stop_prices[symbol], hist[-1], target_prices[symbol], latest_cost_basis[symbol]
-                    ))
-                    print("stop_price ")
-                    try:
-                        o = api.submit_order(
-                        symbol=symbol, qty=str(position), side='sell',
-                        type='limit', time_in_force='day',
-                        limit_price=str(data.close)
-                        )
-                        open_orders[symbol] = o
-                        latest_cost_basis[symbol] = data.close
-                    except Exception as e:
-                        print(e)
-                return
+            #position = positions.get(symbol, 0)
+            try:
+                position = int(api.get_position(symbol).qty)
+                if position > 0:
+                    # Sell for a loss if it's fallen below our stop price
+                    # Sell for a loss if it's below our cost basis and MACD < 0
+                    # Sell for a profit if it's above our target price
+                    hist = macd(
+                        minute_history[symbol]['close'].dropna(),
+                        n_fast=13,
+                        n_slow=21
+                    )
+                    if (
+                        data.close <= stop_prices[symbol] or
+                        (data.close >= target_prices[symbol] and hist[-1] <= 0) or
+                        (data.close <= latest_cost_basis[symbol] and hist[-1] <= 0)
+                    ):
+                        print('Submitting sell for {} shares of {} at {}, stop_price - {}, hist[-1] - {}, target_prices - {}, costbasis - {}'.format(
+                            position, symbol, data.close, stop_prices[symbol], hist[-1], target_prices[symbol], latest_cost_basis[symbol]
+                        ))
+                        print("stop_price ")
+                        try:
+                            o = api.submit_order(
+                            symbol=symbol, qty=str(position), side='sell',
+                            type='limit', time_in_force='day',
+                            limit_price=str(data.close)
+                            )
+                            open_orders[symbol] = o
+                            latest_cost_basis[symbol] = data.close
+                        except Exception as e:
+                            if e.__ne__("position does not exist"):
+                                print(e)
+                    return
+            except Exception as e:
+                if e.__ne__("position does not exist"):
+                    print(e)
 
             # See how high the price went during the first 15 minutes
             lbound = market_open_dt
@@ -340,6 +353,10 @@ def run(tickers, market_open_dt, market_close_dt):
                 if hist[-1] < 0 or np.diff(hist)[-1] < 0:
                     return
                 
+                #Skip the buying if the stock price is greater than the Account Buying power
+                if (api.get_account().buying_power) < data.close:
+                    return
+
                 # Stock has passed all checks; figure out how much to buy
                 stop_price = find_stop(
                     data.close, minute_history[symbol], ts
