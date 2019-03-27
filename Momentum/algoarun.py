@@ -354,7 +354,7 @@ def run(tickers, market_open_dt, market_close_dt):
                     return
                 
                 #Skip the buying if the stock price is greater than the Account Buying power
-                if (api.get_account().buying_power) < data.close:
+                if float(api.get_account().buying_power) < data.close:
                     return
 
                 # Stock has passed all checks; figure out how much to buy
@@ -439,14 +439,18 @@ def removeconn(symbols, symbol, conn):
         #    'AM.{}'.format(symbol)
         #])
     except Exception as e:
-        print(e)
+        if e.__ne__("position does not exist"):
+            print(e)
+        #print(e)
 
 # Handle failed websocket connections by reconnecting
 def run_ws(conn, channels):
     try:
         conn.run(channels)
     except Exception as e:
-        print(e)
+        if e.__ne__("position does not exist"):
+            print(e)
+        #print(e)
         conn.close
         run_ws(conn, channels)
 
