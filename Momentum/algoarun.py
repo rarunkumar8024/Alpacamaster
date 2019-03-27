@@ -313,7 +313,9 @@ def run(tickers, market_open_dt, market_close_dt):
 
             # See how high the price went during the first 15 minutes
             lbound = market_open_dt
-            ubound = lbound + timedelta(minutes=15)
+            ubminutes = int (since_market_open.seconds // 60)
+            #ubound = lbound + timedelta(minutes=15)
+            ubound = lbound + timedelta(minutes=ubminutes)
             high_15m = 0
             try:
                 high_15m = minute_history[symbol][lbound:ubound]['high'].max()
