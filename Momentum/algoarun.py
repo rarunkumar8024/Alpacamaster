@@ -506,6 +506,7 @@ def main():
             since_market_open = current_dt - market_open
             done = today_str
             run(get_tickers(), market_open, market_close)
+        time.sleep(60)
         #    done = now.strftime('%Y-%m-%d')
         #time.sleep(60)
         #print("done - {}".format(done))  
