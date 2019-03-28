@@ -224,7 +224,8 @@ def run(tickers, market_open_dt, market_close_dt):
         if existing_order is not None:
             # Make sure the order's not too old
             submission_ts = existing_order.submitted_at.astimezone(
-                timezone('America/New_York')
+                #timezone('America/New_York')
+                timezone('US/Eastern')
             )
             order_lifetime = ts - submission_ts
             if order_lifetime.seconds // 60 > 1:
@@ -468,7 +469,8 @@ def main():
 #        if (clock.is_open and done != now.strftime('%Y-%m-%d')):
 #        #    print ("Inside clock.is open")
 
-        nyc = timezone('America/New_York')
+        #nyc = timezone('America/New_York')
+        nyc = timezone('US/Eastern')
         today = datetime.today().astimezone(nyc)
         today_str = datetime.today().astimezone(nyc).strftime('%Y-%m-%d')
         calendar = api.get_calendar(start=today_str, end=today_str)[0]
@@ -489,7 +491,14 @@ def main():
         current_dt = datetime.today().astimezone(nyc)
         since_market_open = current_dt - market_open
             
+        print("Current_dt - {}, Since Market Open - {}".format(current_dt,since_market_open))
         while since_market_open.seconds // 60 <= 14:
+            # Cancel any existing open orders on watched symbols
+            existing_orders = api.list_orders(limit=500)
+            for order in existing_orders:
+                if order.symbol in symbols and order.side == 'buy':
+                    print("Cancelling pre-market {} order - {}".format(order.side, order.symbol))
+                    api.cancel_order(order.id)
             time.sleep(1)
         since_market_open = current_dt - market_open
 
