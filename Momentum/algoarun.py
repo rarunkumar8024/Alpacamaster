@@ -459,7 +459,7 @@ def run_ws(conn, channels):
 
 
 def main():
-#    done = None
+    done = None
     # Get when the market opens or opened today
     while True:
        
@@ -492,17 +492,20 @@ def main():
         since_market_open = current_dt - market_open
             
         print("Current_dt - {}, Since Market Open - {}".format(current_dt,since_market_open))
-        while since_market_open.seconds // 60 <= 14:
-            # Cancel any existing open orders on watched symbols
-            existing_orders = api.list_orders(limit=500)
-            for order in existing_orders:
-                if order.symbol in symbols and order.side == 'buy':
-                    print("Cancelling pre-market {} order - {}".format(order.side, order.symbol))
-                    api.cancel_order(order.id)
-            time.sleep(1)
-        since_market_open = current_dt - market_open
 
-        run(get_tickers(), market_open, market_close)
+        clock = api.get_clock()
+        if clock.is_open and done != today_str:
+            while (since_market_open.seconds // 60 <= 14 and clock.is_open):
+                # Cancel any existing open orders on watched symbols
+                existing_orders = api.list_orders(limit=500)
+                for order in existing_orders:
+                    if order.symbol in symbols and order.side == 'buy':
+                        print("Cancelling pre-market {} order - {}".format(order.side, order.symbol))
+                        api.cancel_order(order.id)
+                time.sleep(1)
+            since_market_open = current_dt - market_open
+            done = today_str
+            run(get_tickers(), market_open, market_close)
         #    done = now.strftime('%Y-%m-%d')
         #time.sleep(60)
         #print("done - {}".format(done))  
