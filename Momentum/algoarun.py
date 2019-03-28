@@ -491,7 +491,7 @@ def main():
         current_dt = datetime.today().astimezone(nyc)
         since_market_open = current_dt - market_open
             
-        print("Current_dt - {}, Since Market Open - {}".format(current_dt,since_market_open))
+        #print("Current_dt - {}, Since Market Open - {}".format(current_dt,since_market_open))
 
         clock = api.get_clock()
         if clock.is_open and done != today_str:
