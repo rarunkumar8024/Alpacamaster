@@ -83,6 +83,7 @@ def run(tickers, market_open_dt, market_close_dt):
     
 
     # Update initial state with information from tickers
+    pos_counter = 0
     volume_today = {}
     prev_closes = {}
     for ticker in tickers:
@@ -236,10 +237,10 @@ def run(tickers, market_open_dt, market_close_dt):
                 # Cancel it so we can try again for a fill
                 api.cancel_order(existing_order.id)
             return
-        
-        #position = positions.get(symbol, 0)
+
+        position = positions.get(symbol, 0)
         try:
-            position = int(api.get_position(symbol).qty)
+            #position = int(api.get_position(symbol).qty)
             if position > 0:
                 # Update stop price and target price
                 stoplossprice = float (default_stop * data.close)
@@ -253,15 +254,16 @@ def run(tickers, market_open_dt, market_close_dt):
                         print("Position {} for symbol - {}".fomat(api.get_position(symbol).qty,symbol))
                         removeconn(symbols, symbol, conn)
                 except Exception as e:
-                        #print(e)
+                        print("except1")
                         if e.__eq__("position does not exist"):
                             removeconn(symbols, symbol, conn)
                         if e.__ne__("position does not exist"):
                             print(e)
-            print("Since Market Open - {}, until_market_close.seconds - {}".format(since_market_open.seconds, until_market_close.seconds))
+            #print("Since Market Open - {}, until_market_close.seconds - {}".format(since_market_open.seconds, until_market_close.seconds))
         except Exception as e:
-            if e.__ne__("position does not exist"):
-                print(e)
+            print("except2")
+            if e.__eq__("position does not exist"):
+                print(e)        
 
         if  until_market_close.seconds // 60 < 1:
             print("Closing connections")
@@ -279,9 +281,9 @@ def run(tickers, market_open_dt, market_close_dt):
             # Check for buy signals
 
             # See if we've already bought in first
-            #position = positions.get(symbol, 0)
+            position = positions.get(symbol, 0)
             try:
-                position = int(api.get_position(symbol).qty)
+                #position = int(api.get_position(symbol).qty)
                 if position > 0:
                     # Sell for a loss if it's fallen below our stop price
                     # Sell for a loss if it's below our cost basis and MACD < 0
@@ -308,11 +310,14 @@ def run(tickers, market_open_dt, market_close_dt):
                             )
                             open_orders[symbol] = o
                             latest_cost_basis[symbol] = data.close
+                            del positions[symbol]
                         except Exception as e:
+                            print("except3")
                             if e.__ne__("position does not exist"):
                                 print(e)
                     return
             except Exception as e:
+                print("except4")
                 if e.__ne__("position does not exist"):
                     print(e)
 
@@ -325,6 +330,7 @@ def run(tickers, market_open_dt, market_close_dt):
             try:
                 high_15m = minute_history[symbol][lbound:ubound]['high'].max()
             except Exception as e:
+                #print("except5")
                 # Because we're aggregating on the fly, sometimes the datetime
                 # index can get messy until it's healed by the minute bars
                 return
@@ -393,7 +399,9 @@ def run(tickers, market_open_dt, market_close_dt):
                     )
                     open_orders[symbol] = o
                     latest_cost_basis[symbol] = data.close
+                    positions[symbol] = float(shares_to_buy)
                 except Exception as e:
+                    print("except6")
                     print(e)
                     '''if e.__eq__("insufficient buying power"):
                         if open_orders.get(symbol,0) >= 0:
@@ -419,6 +427,16 @@ def run(tickers, market_open_dt, market_close_dt):
             data.volume
         ]
         volume_today[data.symbol] += data.volume
+        #existing_positions = api.list_positions()
+        for symbol in positions:
+            qty = api.get_position(symbol).qty
+            try:
+                if qty > 0:
+                    positions[symbol] = qty
+                if qty <= 0:
+                    del positions[symbol]
+            except:
+                del positions[symbol]
     
     channels = ['trade_updates']
     for symbol in symbols:
@@ -449,6 +467,7 @@ def removeconn(symbols, symbol, conn):
         #    'AM.{}'.format(symbol)
         #])
     except Exception as e:
+        print("except7")
         if e.__ne__("position does not exist"):
             print(e)
         #print(e)
@@ -458,6 +477,7 @@ def run_ws(conn, channels):
     try:
         conn.run(channels)
     except Exception as e:
+        print("except8")
         if e.__ne__("position does not exist"):
             print(e)
         #print(e)
@@ -534,4 +554,5 @@ def trailingstoploss(symbol,marketprice):
             stop_prices[symbol] = stoplossprice
             print("stoploss value updated stoploss - {}, current price - {}".format(stop_prices[symbol],marketprice))
     except Exception as e:
+        print("except9")
         logger.error(e)
