@@ -193,6 +193,9 @@ def run(tickers, market_open_dt, market_close_dt):
         print("data.start - {}".format(data.start))
         print("data - {}".format(data))
         # First, aggregate 1s bars for up-to-date MACD calculations
+        print("market_open_dt - {}, market_close_dt - {} ".format(market_open_dt, market_close_dt))
+        print("data.start - {}".format(data.start))
+        print("data - {}".format(data))
         ts = data.start
         ts -= timedelta(seconds=ts.second, microseconds=ts.microsecond)
         since_market_open = ts - market_open_dt
