@@ -3,6 +3,7 @@ import requests
 import time
 from ta import macd
 import numpy as np
+import pandas as pd
 from datetime import datetime, timedelta
 from pytz import timezone
 
@@ -193,7 +194,8 @@ def run(tickers, market_open_dt, market_close_dt):
         print("data.start - {}".format(data.start))
         print("data - {}".format(data))
         # First, aggregate 1s bars for up-to-date MACD calculations
-        ts = data.start
+        #ts = data.start
+        ts = pd.Timestamp.now(tz='US/Eastern')
         ts -= timedelta(seconds=ts.second, microseconds=ts.microsecond)
         since_market_open = ts - market_open_dt
         until_market_close = market_close_dt - ts
