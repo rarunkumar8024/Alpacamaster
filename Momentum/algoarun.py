@@ -190,9 +190,9 @@ def run(tickers, market_open_dt, market_close_dt):
     async def handle_second_bar(conn, channel, data):
         #print("inside handle_second_bar")
         symbol = data.symbol
-        print("market_open_dt - {}, market_close_dt - {} ".format(market_open_dt, market_close_dt))
-        print("data.start - {}".format(data.start))
-        print("data - {}".format(data))
+        #print("market_open_dt - {}, market_close_dt - {} ".format(market_open_dt, market_close_dt))
+        #print("data.start - {}".format(data.start))
+        #print("data - {}".format(data))
         # First, aggregate 1s bars for up-to-date MACD calculations
         #ts = data.start
         ts = pd.Timestamp.now(tz='US/Eastern')
@@ -406,9 +406,9 @@ def run(tickers, market_open_dt, market_close_dt):
     # Replace aggregated 1s bars with incoming 1m bars
     @conn.on(r'AM\..*')
     async def handle_minute_bar(conn, channel, data):
-        print("market_open_dt - {}, market_close_dt - {} ".format(market_open_dt, market_close_dt))
-        print("data.start - {}".format(data.start))
-        print("data - {}".format(data))
+        #print("market_open_dt - {}, market_close_dt - {} ".format(market_open_dt, market_close_dt))
+        #print("data.start - {}".format(data.start))
+        #print("data - {}".format(data))
         ts = data.start
         ts -= timedelta(microseconds=ts.microsecond)
         minute_history[data.symbol].loc[ts] = [
