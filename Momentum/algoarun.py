@@ -40,7 +40,7 @@ def get_1000m_history_data(symbols):
         ).df
         c += 1
         print('{}/{}'.format(c, len(symbols)))
-        print("minute history - {}".format(minute_history))
+        #print("minute history - {}".format(minute_history))
     print('Success.')
     return minute_history
 
