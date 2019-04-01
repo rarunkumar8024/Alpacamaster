@@ -40,6 +40,7 @@ def get_1000m_history_data(symbols):
         ).df
         c += 1
         print('{}/{}'.format(c, len(symbols)))
+        print("minute history - {}".format(minute_history))
     print('Success.')
     return minute_history
 
@@ -68,15 +69,23 @@ def get_tickers():
     return tickerlist
 
 
-def find_stop(current_value, minute_history, now):
-    series = minute_history['low'][-100:] \
-                .dropna().resample('5min').min()
+#def find_stop(current_value, minute_history):
+def find_stop(minute_history):
+    '''
+    print("minute history - {}".format(minute_history))
+    print("100 - {}".format(minute_history['low'][-100:]))
+    print("dropna - {}".format(minute_history['low'][-100:].dropna()))
+    print("resample - {}".format(minute_history['low'][-100:].dropna().resample('5T')))
+    print("min - {}".format(minute_history['low'][-100:].dropna().resample('5min').min()))
+    '''
+    series = minute_history['low'][-100:].resample('5min').min().dropna()
+    now = pd.Timestamp.now(tz='US/Eastern')
     series = series[now.floor('1D'):]
     diff = np.nan_to_num(np.diff(series.values))
     low_index = np.where((diff[:-1] <= 0) & (diff[1:] > 0))[0] + 1
     if len(low_index) > 0:
         return series[low_index[-1]] - 0.01
-    return current_value * default_stop
+    #return current_value * default_stop
 
 
 def run(tickers, market_open_dt, market_close_dt):
@@ -106,7 +115,8 @@ def run(tickers, market_open_dt, market_close_dt):
     for order in existing_orders:
         if order.symbol in symbols:
             api.cancel_order(order.id)
-
+    
+    temp_stop_prices = stop_prices
     stop_prices = {}
     latest_cost_basis = {}
 
@@ -117,12 +127,16 @@ def run(tickers, market_open_dt, market_close_dt):
             positions[position.symbol] = float(position.qty)
             # Recalculate cost basis and stop price
             latest_cost_basis[position.symbol] = float(position.cost_basis)
-            stop_prices[position.symbol] = (
-                float(position.cost_basis) * default_stop
-            )
+            #stop_prices[position.symbol] = (
+            #    float(position.cost_basis) * default_stop
+            stop_prices[position.symbol] = find_stop(minute_history[symbol])
+            if float(temp_stop_prices[position.symbol]) > float(stop_prices[position.symbol]):
+                stop_prices[position.symbol] = temp_stop_prices[position.symbol]
+                print("Trailing stop loss value retrieved - {}, calc stop loss - {}".format(
+                    temp_stop_prices[position.symbol],stop_prices[position.symbol]))
             target_prices[position.symbol] = portfolio_value
             print("Existing position - {}, with stop_prices -{}".format(position.symbol,stop_prices[position.symbol]))
-            
+    temp_stop_prices = {}        
 
     # Keep track of what we're buying/selling
     
@@ -146,9 +160,7 @@ def run(tickers, market_open_dt, market_close_dt):
                 if data.order['side'] == 'sell':
                     qty = qty * -1
                 if data.order['side'] == 'buy':
-                    stop_price = find_stop(
-                    data.close, minute_history[symbol], ts
-                    )
+                    stop_price = find_stop(minute_history[symbol])
                     stop_prices[symbol] = stop_price
                     target_prices[symbol] = data.close + (
                     (data.close - stop_price) * 3
@@ -165,9 +177,7 @@ def run(tickers, market_open_dt, market_close_dt):
                 if data.order['side'] == 'sell':
                     qty = qty * -1
                 if data.order['side'] == 'buy':
-                    stop_price = find_stop(
-                    data.close, minute_history[symbol], ts
-                    )
+                    stop_price = find_stop(minute_history[symbol])
                     stop_prices[symbol] = stop_price
                     target_prices[symbol] = data.close + (
                     (data.close - stop_price) * 3
@@ -371,9 +381,7 @@ def run(tickers, market_open_dt, market_close_dt):
                     return
 
                 # Stock has passed all checks; figure out how much to buy
-                stop_price = find_stop(
-                    data.close, minute_history[symbol], ts
-                )
+                stop_price = find_stop(minute_history[symbol])
                 stop_prices[symbol] = stop_price
                 target_prices[symbol] = data.close + (
                     (data.close - stop_price) * 3
@@ -521,19 +529,29 @@ def main():
         #print("Current_dt - {}, Since Market Open - {}".format(current_dt,since_market_open))
 
         clock = api.get_clock()
+        print("clock - {}".format(clock))
         if clock.is_open and done != today_str:
             while since_market_open.seconds // 60 <= 14:
+                get_tickers()
                 # Cancel any existing open orders on watched symbols
                 existing_orders = api.list_orders(limit=500)
                 for order in existing_orders:
                     if order.symbol in symbols and order.side == 'buy':
                         print("Cancelling pre-market {} order - {}".format(order.side, order.symbol))
                         api.cancel_order(order.id)
-                time.sleep(1)
+                time.sleep(60)
             since_market_open = current_dt - market_open
             done = today_str
             run(get_tickers(), market_open, market_close)
+        '''
+        else:
+            ts = pd.Timestamp.now(tz='US/Eastern')
+            symbols = {'CTSH'}
+            min_his = get_1000m_history_data(symbols)
+            find_stop(min_his['CTSH'])
+        '''
         time.sleep(60)
+        
         #    done = now.strftime('%Y-%m-%d')
         #time.sleep(60)
         #print("done - {}".format(done))  
