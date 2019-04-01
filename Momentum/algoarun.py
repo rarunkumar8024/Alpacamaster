@@ -71,13 +71,13 @@ def get_tickers():
 
 #def find_stop(current_value, minute_history):
 def find_stop(minute_history):
-    '''
+    
     print("minute history - {}".format(minute_history))
     print("100 - {}".format(minute_history['low'][-100:]))
     print("dropna - {}".format(minute_history['low'][-100:].dropna()))
     print("resample - {}".format(minute_history['low'][-100:].dropna().resample('5T')))
     print("min - {}".format(minute_history['low'][-100:].dropna().resample('5min').min()))
-    '''
+    
     series = minute_history['low'][-100:].resample('5min').min().dropna()
     now = pd.Timestamp.now(tz='US/Eastern')
     series = series[now.floor('1D'):]
