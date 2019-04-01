@@ -27,7 +27,7 @@ risk = 0.001
 stop_prices = {}
 latest_cost_basis = {}
 target_prices = {}
-
+temp_stop_prices = {}
 
 
 def get_1000m_history_data(symbols):
@@ -117,7 +117,7 @@ def run(tickers, market_open_dt, market_close_dt):
             api.cancel_order(order.id)
     
     temp_stop_prices = stop_prices
-    stop_prices = {}
+    #stop_prices = {}
     latest_cost_basis = {}
 
     # Track any positions bought during previous executions
