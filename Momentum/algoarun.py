@@ -116,8 +116,9 @@ def run(tickers, market_open_dt, market_close_dt):
         if order.symbol in symbols:
             api.cancel_order(order.id)
     
-    temp_stop_prices = stop_prices
-    #stop_prices = {}
+    global temp_stop_prices
+    global stop_prices
+    stop_prices = {}
     latest_cost_basis = {}
 
     # Track any positions bought during previous executions
@@ -495,6 +496,8 @@ def run_ws(conn, channels):
 
 def main():
     done = None
+    global temp_stop_prices
+    global stop_prices
     # Get when the market opens or opened today
     while True:
        
@@ -531,6 +534,7 @@ def main():
         clock = api.get_clock()
         print("clock - {}".format(clock))
         if clock.is_open and done != today_str:
+            temp_stop_prices = stop_prices
             while since_market_open.seconds // 60 <= 14:
                 get_tickers()
                 # Cancel any existing open orders on watched symbols
