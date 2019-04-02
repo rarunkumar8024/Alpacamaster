@@ -382,6 +382,7 @@ def run(tickers, market_open_dt, market_close_dt):
                     return
 
                 # Stock has passed all checks; figure out how much to buy
+                print("minute_history[symbol] - {}".format(minute_history[symbol]))
                 stop_price = find_stop(minute_history[symbol])
                 stop_prices[symbol] = stop_price
                 target_prices[symbol] = data.close + (
