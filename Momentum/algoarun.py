@@ -71,13 +71,13 @@ def get_tickers():
 
 #def find_stop(current_value, minute_history):
 def find_stop(minute_history):
-    
+    '''
     print("minute history - {}".format(minute_history))
     print("100 - {}".format(minute_history['low'][-100:]))
     print("dropna - {}".format(minute_history['low'][-100:].dropna()))
     print("resample - {}".format(minute_history['low'][-100:].dropna().resample('5T')))
     print("min - {}".format(minute_history['low'][-100:].dropna().resample('5min').min()))
-    
+    '''
     series = minute_history['low'][-100:].resample('5min').min().dropna()
     now = pd.Timestamp.now(tz='US/Eastern')
     series = series[now.floor('1D'):]
@@ -129,7 +129,7 @@ def run(tickers, market_open_dt, market_close_dt):
             latest_cost_basis[position.symbol] = float(position.cost_basis)
             #stop_prices[position.symbol] = (
             #    float(position.cost_basis) * default_stop
-            stop_prices[position.symbol] = find_stop(minute_history[symbol])
+            stop_prices[position.symbol] = find_stop(minute_history[position.symbol])
             if float(temp_stop_prices[position.symbol]) > float(stop_prices[position.symbol]):
                 stop_prices[position.symbol] = temp_stop_prices[position.symbol]
                 print("Trailing stop loss value retrieved - {}, calc stop loss - {}".format(
@@ -543,8 +543,10 @@ def main():
             since_market_open = current_dt - market_open
             done = today_str
             run(get_tickers(), market_open, market_close)
+        
+        #else:
+        #    run(get_tickers(), market_open, market_close)
         '''
-        else:
             ts = pd.Timestamp.now(tz='US/Eastern')
             symbols = {'CTSH'}
             min_his = get_1000m_history_data(symbols)
