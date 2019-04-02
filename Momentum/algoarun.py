@@ -438,6 +438,7 @@ def run(tickers, market_open_dt, market_close_dt):
         ]
         volume_today[data.symbol] += data.volume
         #existing_positions = api.list_positions()
+        '''
         for symbol in positions:
             qty = api.get_position(symbol).qty
             try:
@@ -447,6 +448,7 @@ def run(tickers, market_open_dt, market_close_dt):
                     del positions[symbol]
             except:
                 del positions[symbol]
+        '''      
     
     channels = ['trade_updates']
     for symbol in symbols:
