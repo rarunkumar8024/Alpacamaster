@@ -28,6 +28,7 @@ stop_prices = {}
 latest_cost_basis = {}
 target_prices = {}
 temp_stop_prices = {}
+channels = ['trade_updates']
 
 
 def get_1000m_history_data(symbols):
@@ -275,12 +276,12 @@ def run(tickers, market_open_dt, market_close_dt):
             print("except2")
             if e.__eq__("position does not exist"):
                 print(e)        
-
+        '''
         if  until_market_close.seconds // 60 < 1:
             print("Closing connections")
             channels = []
             run_ws(conn,channels)
-
+        '''
         # Now we check to see if it might be time to buy or sell
         
         if (
@@ -450,7 +451,7 @@ def run(tickers, market_open_dt, market_close_dt):
                 del positions[symbol]
         '''      
     
-    channels = ['trade_updates']
+    global channels
     for symbol in symbols:
         symbol_channels = ['A.{}'.format(symbol), 'AM.{}'.format(symbol)]
         channels += symbol_channels
@@ -535,6 +536,7 @@ def main():
         #print("Current_dt - {}, Since Market Open - {}".format(current_dt,since_market_open))
 
         clock = api.get_clock()
+        now = clock.timestamp
         print("clock - {}".format(clock))
         if clock.is_open and done != today_str:
             temp_stop_prices = stop_prices
@@ -564,12 +566,13 @@ def main():
         #    done = now.strftime('%Y-%m-%d')
         #time.sleep(60)
         #print("done - {}".format(done))  
-        '''if clock.is_open == False and done == now.strftime('%Y-%m-%d'):
-            conn.close
-            print("closed")
+        if clock.is_open == False and done == now.strftime('%Y-%m-%d'):
+            channels = ['trade_updates']
+            run_ws(conn,channels)
+            print("Connections closed")
             done = None
-            time.sleep(54000)
-        '''
+        #    time.sleep(54000)
+        
 
 def trailingstoploss(symbol,marketprice):
     try:
