@@ -66,7 +66,7 @@ def get_tickers():
         if ticker.ticker in epsymbols:
             tickerlist.append(ticker)
     #tickerlist.append(ticker for ticker in tickers if (ticker.ticker in epsymbols))
-    print("TickerList --> {}".format(tickerlist))
+    #print("TickerList --> {}".format(tickerlist))
     return tickerlist
 
 
@@ -192,11 +192,21 @@ def run(tickers, market_open_dt, market_close_dt):
                 partial_fills[symbol] = 0
                 positions[symbol] += qty
                 if positions[symbol] == 0:
-                    removeconn(symbols, symbol, conn)
+                    removeconn(symbol)
                 open_orders[symbol] = None
             elif event == 'canceled' or event == 'rejected':
                 print("Inside trade_update routine - cancelled or rejected")
+                qty = data.order['filled_qty']
+                if data.order['side'] == 'buy':
+                    qty = qty * -1
+                positions[symbol] = (
+                    positions.get(symbol, 0) - partial_fills.get(symbol, 0)
+                )
                 partial_fills[symbol] = 0
+                positions[symbol] += qty
+                if positions[symbol] == 0:
+                    del positions[symbol]
+                    removeconn(symbol)
                 open_orders[symbol] = None
 
     @conn.on(r'A\..*')
@@ -264,17 +274,19 @@ def run(tickers, market_open_dt, market_close_dt):
                 try:
                     if int(api.get_position(symbol).qty) <= 0:
                         print("Position {} for symbol - {}".fomat(api.get_position(symbol).qty,symbol))
-                        removeconn(symbols, symbol, conn)
+                        removeconn(symbol)
                 except Exception as e:
                         print("except1")
                         if e.__eq__("position does not exist"):
-                            removeconn(symbols, symbol, conn)
+                            del positions[symbol]
+                            removeconn(symbol)
                         if e.__ne__("position does not exist"):
                             print(e)
             #print("Since Market Open - {}, until_market_close.seconds - {}".format(since_market_open.seconds, until_market_close.seconds))
         except Exception as e:
             print("except2")
             if e.__eq__("position does not exist"):
+                del positions[symbol]
                 print(e)        
         '''
         if  until_market_close.seconds // 60 < 1:
@@ -322,16 +334,20 @@ def run(tickers, market_open_dt, market_close_dt):
                             )
                             open_orders[symbol] = o
                             latest_cost_basis[symbol] = data.close
-                            del positions[symbol]
+                            #del positions[symbol]
                         except Exception as e:
                             print("except3")
                             if e.__ne__("position does not exist"):
                                 print(e)
+                            if e.__eq__("position does not exist"):
+                                del positions[symbol]
                     return
             except Exception as e:
                 print("except4")
                 if e.__ne__("position does not exist"):
                     print(e)
+                if e.__eq__("position does not exist"):
+                    del positions[symbol]
 
             # See how high the price went during the first 15 minutes
             lbound = market_open_dt
@@ -462,7 +478,7 @@ def run(tickers, market_open_dt, market_close_dt):
     run_ws(conn, channels)
 
 
-def removeconn(symbols, symbol, conn):
+def removeconn(symbol):
     try:
         
         if stop_prices.get(symbol,0) >= 0:
@@ -470,7 +486,7 @@ def removeconn(symbols, symbol, conn):
         if latest_cost_basis.get(symbol,0) >= 0:
             del latest_cost_basis[symbol]
         if target_prices.get(symbol,0) >= 0:
-            del target_prices.remove[symbol]
+            del target_prices[symbol]
         #if symbol in symbols:
         #    symbols.remove(symbol)
         #if len(symbols) <= 0:
