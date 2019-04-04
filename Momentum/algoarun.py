@@ -549,6 +549,9 @@ def main():
                         print("Cancelling pre-market {} order - {}".format(order.side, order.symbol))
                         api.cancel_order(order.id)
                 time.sleep(60)
+                current_dt = datetime.today().astimezone(nyc)
+                since_market_open = current_dt - market_open
+            current_dt = datetime.today().astimezone(nyc)
             since_market_open = current_dt - market_open
             done = today_str
             run(get_tickers(), market_open, market_close)
