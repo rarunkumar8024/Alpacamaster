@@ -553,8 +553,9 @@ def main():
 
         clock = api.get_clock()
         now = clock.timestamp
-        print("clock - {}".format(clock))
+        #print("clock - {}".format(clock))
         if clock.is_open and done != today_str:
+            print("clock - {}".format(clock))
             temp_stop_prices = stop_prices
             while since_market_open.seconds // 60 <= 14:
                 get_tickers()
