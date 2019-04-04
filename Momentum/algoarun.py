@@ -66,7 +66,7 @@ def get_tickers():
         if ticker.ticker in epsymbols:
             tickerlist.append(ticker)
     #tickerlist.append(ticker for ticker in tickers if (ticker.ticker in epsymbols))
-    #print("TickerList --> {}".format(tickerlist))
+    print("TickerList --> {}".format(tickerlist))
     return tickerlist
 
 
