@@ -266,6 +266,7 @@ def run(tickers, market_open_dt, market_close_dt):
             if position > 0:
                 # Update stop price and target price
                 stoplossprice = float (default_stop * data.close)
+                stopprice = stop_prices.get(symbol,0)
                 if stoplossprice > stop_prices[symbol]:
                     stop_prices[symbol] = stoplossprice
                 
