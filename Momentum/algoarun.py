@@ -132,6 +132,8 @@ def run(tickers, market_open_dt, market_close_dt):
             #stop_prices[position.symbol] = (
             #    float(position.cost_basis) * default_stop
             stop_prices[position.symbol] = find_stop(minute_history[position.symbol])
+            if stop_prices[position.symbol] == 'None':
+                stop_prices[position.symbol] = float(position.cost_basis) * default_stop
             if temp_stop_prices.get(position.symbol,0) and (float(temp_stop_prices[position.symbol]) > float(stop_prices[position.symbol])):
                 stop_prices[position.symbol] = temp_stop_prices[position.symbol]
                 print("Trailing stop loss value retrieved - {}, calc stop loss - {}".format(
