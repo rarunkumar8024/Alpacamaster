@@ -286,6 +286,8 @@ def run(tickers, market_open_dt, market_close_dt):
             #print("Since Market Open - {}, until_market_close.seconds - {}".format(since_market_open.seconds, until_market_close.seconds))
         except Exception as e:
             print("except2")
+            print("symbol - {}, stop_price - {}, stoploss - {}".format(
+                symbol, stop_prices[symbol], stoplossprice))  
             if e.__eq__("position does not exist"):
                 del positions[symbol]
                 print(e)        
