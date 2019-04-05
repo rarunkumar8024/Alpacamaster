@@ -285,6 +285,7 @@ def run(tickers, market_open_dt, market_close_dt):
                             removeconn(symbol)
                         if e.__ne__("position does not exist"):
                             print(e)
+                        return
             #print("Since Market Open - {}, until_market_close.seconds - {}".format(since_market_open.seconds, until_market_close.seconds))
         except Exception as e:
             print("except2")
@@ -292,7 +293,8 @@ def run(tickers, market_open_dt, market_close_dt):
                 symbol, stop_prices[symbol], stoplossprice))  
             if e.__eq__("position does not exist"):
                 del positions[symbol]
-                print(e)        
+                print(e)   
+            return     
         '''
         if  until_market_close.seconds // 60 < 1:
             print("Closing connections")
@@ -346,6 +348,7 @@ def run(tickers, market_open_dt, market_close_dt):
                                 print(e)
                             if e.__eq__("position does not exist"):
                                 del positions[symbol]
+                            return
                     return
             except Exception as e:
                 print("except4")
@@ -353,6 +356,7 @@ def run(tickers, market_open_dt, market_close_dt):
                     print(e)
                 if e.__eq__("position does not exist"):
                     del positions[symbol]
+                return
 
             # See how high the price went during the first 15 minutes
             lbound = market_open_dt
@@ -431,10 +435,11 @@ def run(tickers, market_open_dt, market_close_dt):
                     )
                     open_orders[symbol] = o
                     latest_cost_basis[symbol] = data.close
-                    positions[symbol] = float(shares_to_buy)
+                    positions[symbol] = int(shares_to_buy)
                 except Exception as e:
                     print("except6")
                     print(e)
+                    return
                     '''if e.__eq__("insufficient buying power"):
                         if open_orders.get(symbol,0) >= 0:
                             del open_orders[symbol]
@@ -505,6 +510,7 @@ def removeconn(symbol):
         if e.__ne__("position does not exist"):
             print(e)
         #print(e)
+        return
 
 # Handle failed websocket connections by reconnecting
 def run_ws(conn, channels):
