@@ -158,7 +158,7 @@ def run(tickers, market_open_dt, market_close_dt):
             event = data.event
             if event == 'partial_fill':
                 print("Inside trade_update routine - partial fill")
-                qty = data.order['filled_qty']
+                qty = int(data.order['filled_qty'])
                 if data.order['side'] == 'sell':
                     qty = qty * -1
                 if data.order['side'] == 'buy':
@@ -175,7 +175,7 @@ def run(tickers, market_open_dt, market_close_dt):
                 open_orders[symbol] = data.order
             elif event == 'filled':
                 print("Inside trade_update routine - filled")
-                qty = data.order['filled_qty']
+                qty = int (data.order['filled_qty'])
                 if data.order['side'] == 'sell':
                     qty = qty * -1
                 if data.order['side'] == 'buy':
@@ -196,7 +196,7 @@ def run(tickers, market_open_dt, market_close_dt):
                 open_orders[symbol] = None
             elif event == 'canceled' or event == 'rejected':
                 print("Inside trade_update routine - cancelled or rejected")
-                qty = data.order['filled_qty']
+                qty = int(data.order['filled_qty'])
                 if data.order['side'] == 'buy':
                     qty = qty * -1
                 positions[symbol] = (
