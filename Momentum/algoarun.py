@@ -304,7 +304,7 @@ def run(tickers, market_open_dt, market_close_dt):
         # Now we check to see if it might be time to buy or sell
         
         if (
-            since_market_open.seconds // 60 > 15 
+            since_market_open.seconds // 60 > 10 
             and
             #since_market_open.seconds // 60 < 60
             until_market_close.seconds // 60 > 1
@@ -366,6 +366,7 @@ def run(tickers, market_open_dt, market_close_dt):
             high_15m = 0
             try:
                 high_15m = minute_history[symbol][lbound:ubound]['high'].max()
+                print("symbol - {}, high value - {}".format(symbol,high_15m))
             except Exception as e:
                 #print("except5")
                 # Because we're aggregating on the fly, sometimes the datetime
@@ -568,7 +569,7 @@ def main():
         if clock.is_open and done != today_str:
             print("clock - {}".format(clock))
             temp_stop_prices = stop_prices
-            while since_market_open.seconds // 60 <= 14:
+            while since_market_open.seconds // 60 <= 10:
                 get_tickers()
                 # Cancel any existing open orders on watched symbols
                 existing_orders = api.list_orders(limit=500)
