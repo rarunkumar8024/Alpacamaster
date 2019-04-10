@@ -230,14 +230,17 @@ def run(tickers, market_open_dt, market_close_dt):
         until_market_close = market_close_dt - ts
         if ts.time() <= pd.Timestamp('09:30',tz='US/Eastern').time():
             channels = ['trade_updates']
+            print("A - 9:30")
             run_ws(conn,channels)
             print("Connections closed from A")
         elif ts.time() >= pd.Timestamp('16:00',tz='US/Eastern').time():
             channels = ['trade_updates']
+            print("A - 16")
             run_ws(conn,channels)
             print("Connections closed from A")
         if since_market_open.seconds // divsec == 1:
             channels = ['trade_updates']
+            print("A - divsec")
             run_ws(conn,channels)
             print("Connections closed from A and getting tickers, divsec - {}".format(divsec))      
             divsec += 600
@@ -480,10 +483,12 @@ def run(tickers, market_open_dt, market_close_dt):
         ts = pd.Timestamp.now(tz='US/Eastern')
         if ts.time() <= pd.Timestamp('09:30', tz='US/Eastern').time():
             channels = ['trade_updates']
+            print("AM - 9:30")
             run_ws(conn,channels)
             print("Connections closed from AM")
         elif ts.time() >= pd.Timestamp('16:00', tz='US/Eastern').time():
             channels = ['trade_updates']
+            print("AM - 16")
             run_ws(conn,channels)
             print("Connections closed from AM")
         ts = data.start
@@ -517,6 +522,7 @@ def run(tickers, market_open_dt, market_close_dt):
     print('Watching {} symbols.'.format(len(symbols)))
     print("Channels - {}".format(channels))
     #conn.register(channels,run)
+    print("channel ini")
     run_ws(conn, channels)
 
 
