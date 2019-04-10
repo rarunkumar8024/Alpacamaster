@@ -236,7 +236,7 @@ def run(tickers, market_open_dt, market_close_dt):
             channels = ['trade_updates']
             run_ws(conn,channels)
             print("Connections closed from A")
-        if since_market_open.seconds // divsec == 0:
+        if since_market_open.seconds // divsec == 1:
             channels = ['trade_updates']
             run_ws(conn,channels)
             print("Connections closed from A and getting tickers, divsec - {}".format(divsec))      
