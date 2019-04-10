@@ -385,7 +385,7 @@ def run(tickers, market_open_dt, market_close_dt):
             #ubound = lbound + timedelta(minutes=15)
             ubound = lbound + timedelta(minutes=ubminutes)
             high_day = 0
-            high_60m
+            high_60m = 0
             try:
                 high_day = minute_history[symbol][lbound:ubound]['high'].max()
                 high_60m = minute_history[symbol][-60:]['high'].max()
