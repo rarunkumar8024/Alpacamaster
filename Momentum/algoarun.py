@@ -30,6 +30,7 @@ target_prices = {}
 temp_stop_prices = {}
 channels = ['trade_updates']
 divsec = 600
+#runflag = False
 
 
 def get_1000m_history_data(symbols):
@@ -224,6 +225,7 @@ def run(tickers, market_open_dt, market_close_dt):
         #ts = data.start
         global channels
         global divsec
+        #global runflag
         ts = pd.Timestamp.now(tz='US/Eastern')
         ts -= timedelta(seconds=ts.second, microseconds=ts.microsecond)
         since_market_open = ts - market_open_dt
@@ -238,12 +240,12 @@ def run(tickers, market_open_dt, market_close_dt):
             print("A - 16")
             run_ws(conn,channels)
             print("Connections closed from A")
-        if since_market_open.seconds // divsec == 1:
+        if since_market_open.seconds % divsec == 0:
             channels = ['trade_updates']
             print("A - divsec")
             run_ws(conn,channels)
             print("Connections closed from A and getting tickers, divsec - {}".format(divsec))      
-            divsec += 600
+            #divsec += 600
             run(get_tickers(), market_open_dt, market_close_dt)
         
         try:
@@ -402,8 +404,8 @@ def run(tickers, market_open_dt, market_close_dt):
             )
             if (
                 daily_pct_change > .04 and
-                data.close > high_60m and
-                high_60m > high_day and
+                data.close >= high_60m and
+                high_60m >= high_day and
                 volume_today[symbol] > 30000
             ):
                 #if float (api.get_account.buying_power) < data.close:
@@ -553,13 +555,15 @@ def removeconn(symbol):
 # Handle failed websocket connections by reconnecting
 def run_ws(conn, channels):
     try:
+        #global runflag = False
         conn.run(channels)
     except Exception as e:
         print("except8")
         if e.__ne__("position does not exist"):
             print(e)
         #print(e)
-        conn.close
+        #conn.close
+        time.sleep(60)
         run_ws(conn, channels)
 
 
@@ -567,6 +571,7 @@ def main():
     done = None
     global temp_stop_prices
     global stop_prices
+    #global runflag = False
     # Get when the market opens or opened today
     while True:
        
