@@ -559,11 +559,12 @@ def run_ws(conn, channels):
         conn.run(channels)
     except Exception as e:
         print("except8")
-        if e.__ne__("position does not exist"):
-            print(e)
+        print(e)
+        #if e.__ne__("position does not exist"):
+        #    print(e)
         #print(e)
         #conn.close
-        time.sleep(60)
+        #time.sleep(60)
         run_ws(conn, channels)
 
 
