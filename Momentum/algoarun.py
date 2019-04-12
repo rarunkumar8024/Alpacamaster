@@ -95,6 +95,7 @@ def run(tickers, market_open_dt, market_close_dt):
     
 
     # Update initial state with information from tickers
+    global channels
     pos_counter = 0
     volume_today = {}
     prev_closes = {}
@@ -223,8 +224,8 @@ def run(tickers, market_open_dt, market_close_dt):
         #print("data - {}".format(data))
         # First, aggregate 1s bars for up-to-date MACD calculations
         #ts = data.start
-        global channels
-        global divsec
+        #global channels
+        #global divsec
         #global runflag
         ts = pd.Timestamp.now(tz='US/Eastern')
         ts -= timedelta(seconds=ts.second, microseconds=ts.microsecond)
@@ -481,7 +482,7 @@ def run(tickers, market_open_dt, market_close_dt):
         #print("market_open_dt - {}, market_close_dt - {} ".format(market_open_dt, market_close_dt))
         #print("data.start - {}".format(data.start))
         #print("data - {}".format(data))
-        global channels
+        #global channels
         ts = pd.Timestamp.now(tz='US/Eastern')
         if ts.time() <= pd.Timestamp('09:30', tz='US/Eastern').time():
             channels = ['trade_updates']
@@ -516,7 +517,7 @@ def run(tickers, market_open_dt, market_close_dt):
                 del positions[symbol]
         '''      
     
-    global channels
+    
     for symbol in symbols:
         symbol_channels = ['A.{}'.format(symbol), 'AM.{}'.format(symbol)]
         channels += symbol_channels
@@ -563,7 +564,7 @@ def run_ws(conn, channels):
         #if e.__ne__("position does not exist"):
         #    print(e)
         #print(e)
-        #conn.close
+        conn.close
         #time.sleep(60)
         run_ws(conn, channels)
 
