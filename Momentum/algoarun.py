@@ -579,7 +579,7 @@ def main():
     done = None
     global temp_stop_prices
     global stop_prices
-    test_flag = Flag
+    test_flag = False
     global divsec
     #global runflag = False
     # Get when the market opens or opened today
