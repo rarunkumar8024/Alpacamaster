@@ -579,7 +579,7 @@ def main():
     done = None
     global temp_stop_prices
     global stop_prices
-    test_flag = True
+    test_flag = Flag
     global divsec
     #global runflag = False
     # Get when the market opens or opened today
@@ -621,7 +621,7 @@ def main():
         if (clock.is_open and done != today_str) or test_flag:
             print("clock - {}".format(clock))
             temp_stop_prices = stop_prices
-            while since_market_open.seconds // 60 <= 10:
+            while since_market_open.seconds // 60 <= 14:
                 get_tickers()
                 # Cancel any existing open orders on watched symbols
                 existing_orders = api.list_orders(limit=500)
