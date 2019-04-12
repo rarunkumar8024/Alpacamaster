@@ -225,12 +225,13 @@ def run(tickers, market_open_dt, market_close_dt):
         # First, aggregate 1s bars for up-to-date MACD calculations
         #ts = data.start
         #global channels
-        #global divsec
+        global divsec
         #global runflag
         ts = pd.Timestamp.now(tz='US/Eastern')
         ts -= timedelta(seconds=ts.second, microseconds=ts.microsecond)
         since_market_open = ts - market_open_dt
         until_market_close = market_close_dt - ts
+        '''
         if ts.time() <= pd.Timestamp('09:30',tz='US/Eastern').time():
             channels = ['trade_updates']
             print("A - 9:30")
@@ -241,11 +242,12 @@ def run(tickers, market_open_dt, market_close_dt):
             print("A - 16")
             run_ws(conn,channels)
             print("Connections closed from A")
+        '''
         if since_market_open.seconds % divsec == 0:
             channels = ['trade_updates']
             print("A - divsec")
-            run_ws(conn,channels)
-            print("Connections closed from A and getting tickers, divsec - {}".format(divsec))      
+            #run_ws(conn,channels)
+            #print("Connections closed from A and getting tickers, divsec - {}".format(divsec))      
             #divsec += 600
             run(get_tickers(), market_open_dt, market_close_dt)
         
@@ -406,7 +408,7 @@ def run(tickers, market_open_dt, market_close_dt):
             if (
                 daily_pct_change > .04 and
                 data.close >= high_60m and
-                high_60m >= high_day and
+                #high_60m >= high_day and
                 volume_today[symbol] > 30000
             ):
                 #if float (api.get_account.buying_power) < data.close:
@@ -484,6 +486,7 @@ def run(tickers, market_open_dt, market_close_dt):
         #print("data - {}".format(data))
         #global channels
         ts = pd.Timestamp.now(tz='US/Eastern')
+        '''
         if ts.time() <= pd.Timestamp('09:30', tz='US/Eastern').time():
             channels = ['trade_updates']
             print("AM - 9:30")
@@ -494,6 +497,7 @@ def run(tickers, market_open_dt, market_close_dt):
             print("AM - 16")
             run_ws(conn,channels)
             print("Connections closed from AM")
+        '''
         ts = data.start
         ts -= timedelta(microseconds=ts.microsecond)
         minute_history[data.symbol].loc[ts] = [
@@ -557,7 +561,9 @@ def removeconn(symbol):
 def run_ws(conn, channels):
     try:
         #global runflag = False
+        conn.close
         conn.run(channels)
+        print("conn.run is complete")
     except Exception as e:
         print("except8")
         print(e)
@@ -573,6 +579,8 @@ def main():
     done = None
     global temp_stop_prices
     global stop_prices
+    test_flag = True
+    global divsec
     #global runflag = False
     # Get when the market opens or opened today
     while True:
@@ -610,7 +618,7 @@ def main():
         clock = api.get_clock()
         now = clock.timestamp
         #print("clock - {}".format(clock))
-        if clock.is_open and done != today_str:
+        if (clock.is_open and done != today_str) or test_flag:
             print("clock - {}".format(clock))
             temp_stop_prices = stop_prices
             while since_market_open.seconds // 60 <= 10:
@@ -627,7 +635,7 @@ def main():
             #current_dt = datetime.today().astimezone(nyc)
             #since_market_open = current_dt - market_open
             done = today_str
-            divsec = 600
+            divsec = 60
             run(get_tickers(), market_open, market_close)
         
         #else:
