@@ -215,7 +215,7 @@ def run(tickers, market_open_dt, market_close_dt):
                     removeconn(symbol)
                 open_orders[symbol] = None
 
-    @conn.on(r'A\..*')
+    @conn.on(r'AM\..*')
     async def handle_second_bar(conn, channel, data):
         #print("inside handle_second_bar")
         symbol = data.symbol
@@ -242,7 +242,7 @@ def run(tickers, market_open_dt, market_close_dt):
             print("A - 16")
             run_ws(conn,channels)
             print("Connections closed from A")
-        '''
+        
         if since_market_open.seconds % divsec == 0:
             channels = ['trade_updates']
             print("A - divsec")
@@ -250,7 +250,7 @@ def run(tickers, market_open_dt, market_close_dt):
             #print("Connections closed from A and getting tickers, divsec - {}".format(divsec))      
             #divsec += 600
             run(get_tickers(), market_open_dt, market_close_dt)
-        
+        '''
         try:
             current = minute_history[data.symbol].loc[ts]
         except KeyError:
@@ -328,7 +328,6 @@ def run(tickers, market_open_dt, market_close_dt):
             run_ws(conn,channels)
         '''
         # Now we check to see if it might be time to buy or sell
-        
         if (
             since_market_open.seconds // 60 > 10 
             and
@@ -479,7 +478,7 @@ def run(tickers, market_open_dt, market_close_dt):
                 return
             
     # Replace aggregated 1s bars with incoming 1m bars
-    @conn.on(r'AM\..*')
+    @conn.on(r'A\..*')
     async def handle_minute_bar(conn, channel, data):
         #print("market_open_dt - {}, market_close_dt - {} ".format(market_open_dt, market_close_dt))
         #print("data.start - {}".format(data.start))
@@ -579,12 +578,15 @@ def main():
     done = None
     global temp_stop_prices
     global stop_prices
-    test_flag = False
+    test_flag = True
     global divsec
+    global i
     #global runflag = False
     # Get when the market opens or opened today
+    
     while True:
-       
+
+        
 #       clock = api.get_clock()
 #        now = clock.timestamp
 #        print ("done - {}, clock - {}".format(done, clock))
@@ -637,6 +639,7 @@ def main():
             done = today_str
             divsec = 60
             run(get_tickers(), market_open, market_close)
+            print("executed run")
         
         #else:
         #    run(get_tickers(), market_open, market_close)
