@@ -34,30 +34,34 @@ def _dry_run_submit(*args, **kwargs):
 def _get_prices(symbols, end_dt, max_workers=5):
     '''Get the map of DataFrame price data from Alpaca's data API.'''
 
+    '''Get the map of DataFrame price data from polygon, in parallel.'''
+
+    #start_dt = end_dt - pd.Timedelta('1200 days')
     start_dt = end_dt - pd.Timedelta('50 days')
-    start = start_dt.strftime('%Y-%m-%d')
-    end = end_dt.strftime('%Y-%m-%d')
+    _from = start_dt.strftime('%Y-%m-%d')
+    to = end_dt.strftime('%Y-%m-%d')
 
-    def get_barset(symbols):
-        return api.get_barset(
-            symbols,
-            'day',
-            limit = 50,
-            start=start,
-            end=end
-        )
+    def historic_agg(symbol):
+        return api.polygon.historic_agg(
+            'day', symbol, _from=_from, to=to).df.sort_index()
 
-    # The maximum number of symbols we can request at once is 200.
-    barset = None
-    idx = 0
-    while idx <= len(symbols) - 1:
-        if barset is None:
-            barset = get_barset(symbols[idx:idx+200])
-        else:
-            barset.update(get_barset(symbols[idx:idx+200]))
-        idx += 200
+    with concurrent.futures.ThreadPoolExecutor(
+            max_workers=max_workers) as executor:
+        results = {}
+        future_to_symbol = {
+            executor.submit(
+                historic_agg,
+                symbol): symbol for symbol in symbols}
+        for future in concurrent.futures.as_completed(future_to_symbol):
+            symbol = future_to_symbol[future]
+            try:
+                results[symbol] = future.result()
+            except Exception as exc:
+                logger.warning(
+                    '{} generated an exception: {}'.format(
+                        symbol, exc))
 
-    return barset.df
+    return results
 
 
 def prices(symbols):
