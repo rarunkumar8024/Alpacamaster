@@ -229,7 +229,7 @@ def main():
     global todays_order
     flag_sym = True
     flag_inirun = True
-    flag_test = True
+    flag_test = False
     logging.info('start running')
     while True:
         try:
