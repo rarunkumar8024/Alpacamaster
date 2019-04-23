@@ -208,7 +208,7 @@ def trade(orders, wait=30):
                 symbol=order['symbol'],
                 qty=order['qty'],
                 side='buy',
-                type='limit',
+                type='market',
                 time_in_force='day',
             )
             # Add stoploss entry for the ordered symbol
