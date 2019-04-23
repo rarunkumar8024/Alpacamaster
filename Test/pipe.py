@@ -10,15 +10,16 @@ def get_tickers(min_share_price, max_share_price, min_last_dv):
     print('Success.')
     assets = api.list_assets()
     #print("assets - {}".format(assets))
-    symbols = [asset.symbol for asset in assets if asset.tradable]
+    symbols = [asset.symbol for asset in assets if (asset.tradable and len(asset.symbol) <= 4)]
     tickerlist = [ticker for ticker in tickers if (
         ticker.ticker in symbols and
         ticker.lastTrade['p'] >= min_share_price and
         ticker.lastTrade['p'] <= max_share_price and
         ticker.prevDay['v'] * ticker.lastTrade['p'] > min_last_dv #and
+        #len(ticker.ticker) <= 4
         #ticker.todaysChangePerc >= 3.5
         )]
     #print("Tickerlist - {}".format(tickerlist))
-    Universe = [ticker.ticker for ticker in tickers]
+    Universe = [ticker.ticker for ticker in tickers ]
     print("Universe from Pipe - {}".format(Universe))
     return Universe
