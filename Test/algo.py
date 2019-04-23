@@ -33,32 +33,34 @@ def _dry_run_submit(*args, **kwargs):
 
 def _get_prices(symbols, end_dt, max_workers=5):
     '''Get the map of DataFrame price data from Alpaca's data API.'''
+    try:
+        start_dt = end_dt - pd.Timedelta('50 days')
+        start = start_dt.strftime('%Y-%m-%d')
+        end = end_dt.strftime('%Y-%m-%d')
 
-    start_dt = end_dt - pd.Timedelta('50 days')
-    start = start_dt.strftime('%Y-%m-%d')
-    end = end_dt.strftime('%Y-%m-%d')
+        def get_barset(symbols):
+            return api.get_barset(
+                symbols,
+                'day',
+                limit = 50,
+                start=start,
+                end=end
+            )
 
-    def get_barset(symbols):
-        return api.get_barset(
-            symbols,
-            'day',
-            limit = 50,
-            start=start,
-            end=end
-        )
+        # The maximum number of symbols we can request at once is 200.
+        barset = None
+        idx = 0
+        while idx <= len(symbols) - 1:
+            if barset is None:
+                barset = get_barset(symbols[idx:idx+200])
+            else:
+                barset.update(get_barset(symbols[idx:idx+200]))
+            idx += 200
 
-    # The maximum number of symbols we can request at once is 200.
-    barset = None
-    idx = 0
-    while idx <= len(symbols) - 1:
-        if barset is None:
-            barset = get_barset(symbols[idx:idx+200])
-        else:
-            barset.update(get_barset(symbols[idx:idx+200]))
-        idx += 200
-
-    return barset.df
-
+        return barset.df
+    except Exception as e:
+            logger.error(e)
+            return barset.df
 
 def prices(symbols):
     '''Get the map of prices in DataFrame with the symbol name key.'''
