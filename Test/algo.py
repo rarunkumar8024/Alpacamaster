@@ -18,6 +18,7 @@ default_stop = .95
 risk = 0.1
 done = None
 todays_order = {}
+stopprice = {}
 
 api = tradeapi.REST()
 
@@ -170,7 +171,7 @@ def trade(orders, wait=30):
     we sell first and wait for all the sell orders to fill before submitting
     our buy orders.
     '''
-
+    global stopprice
     # process the sell orders first
     sells = [o for o in orders if o['side'] == 'sell']
     for order in sells:
@@ -287,6 +288,7 @@ def getcurrentprice(symbol):
     return (cprice.price)
 
 def set_stoploss(symbol):
+    global stopprice
     try:
         position = api.get_position(symbol)
         costbasis = float(position.avg_entry_price)
@@ -304,6 +306,7 @@ def set_stoploss(symbol):
         logger.error(e)
     
 def stoploss():
+    global stopprice
     #global done
     try:
         positions = api.list_positions()
