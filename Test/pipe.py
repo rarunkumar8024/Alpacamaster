@@ -20,6 +20,6 @@ def get_tickers(min_share_price, max_share_price, min_last_dv):
         #ticker.todaysChangePerc >= 3.5
         )]
     #print("Tickerlist - {}".format(tickerlist))
-    Universe = [ticker.ticker for ticker in tickers ]
+    Universe = [ticker.ticker for ticker in tickerlist ]
     print("Universe from Pipe - {}".format(Universe))
     return Universe[:1000]
