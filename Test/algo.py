@@ -309,6 +309,7 @@ def stoploss():
     global stopprice
     #global orders
     #global done
+    orders = []
     try:
         positions = api.list_positions()
         logger.info(positions)
