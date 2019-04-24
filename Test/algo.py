@@ -307,6 +307,7 @@ def set_stoploss(symbol):
     
 def stoploss():
     global stopprice
+    #global orders
     #global done
     try:
         positions = api.list_positions()
@@ -336,7 +337,7 @@ def stoploss():
                     'side': 'sell',
                 })
                 logger.info(f'Stoploss order(sell): {symbol} for {shares}')
-                orders = get_orders(api, price_df)
+                #orders = get_orders(api, price_df)
                 trade(orders)
                 #done = None
                 
