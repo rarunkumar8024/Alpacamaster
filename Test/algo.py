@@ -79,7 +79,9 @@ def calc_scores(price_df, dayindex=-1):
     '''
     diffs = {}
     param = 10
-    for symbol in price_df.columns.levels[0]:
+    #print(price_df)
+    #for symbol in price_df.columns.levels[0]:
+    for symbol in price_df:
         df = price_df[symbol]
         if len(df.close.values) <= param:
             continue
@@ -242,22 +244,28 @@ def main():
             now = clock.timestamp
             #print("done - {}, now - {}, pd timestamp - {}, flag_sym - {}".format(done,now.time(), pd.Timestamp('08:09',tz=NY).time(), flag_sym))
             if (done != now.strftime('%Y-%m-%d') 
-                and now.time() > pd.Timestamp('09:00',tz=NY).time() 
+                and now.time() > pd.Timestamp('09:15',tz=NY).time() 
                 and now.time() < pd.Timestamp('09:30',tz=NY).time() 
                 and flag_sym) or flag_inirun: 
                 
-                Universe = get_tickers(min_share_price,max_share_price,min_last_dv)
+                #Universe = get_tickers(min_share_price,max_share_price,min_last_dv)
+                price_df = get_tickers(min_share_price,max_share_price,min_last_dv)
                 flag_sym = False
                 flag_inirun = False
+            '''
             if flag_test:
                 Universe = UniverseT
+                price_df = prices(Universe)
                 print("Universe Test - {}".format(Universe))
             #print("after get tickers - {}".format(Universe))
+            '''
             if (clock.is_open and done != now.strftime('%Y-%m-%d')) or flag_test:
                 todays_order = set()
-                if len(Universe) == 0:
-                    Universe = get_tickers(min_share_price,max_share_price,min_last_dv)
-                price_df = prices(Universe)
+                #if len(Universe) == 0:
+                if len(price_df) == 0:
+                    #Universe = get_tickers(min_share_price,max_share_price,min_last_dv)
+                    price_df = get_tickers(min_share_price,max_share_price,min_last_dv)
+                #price_df = prices(Universe)
                 orders = get_orders(api, price_df)
                 trade(orders)
                 todays_order = gettodaysorder()
@@ -275,7 +283,7 @@ def main():
                     orders = get_orders(api, price_df)
                     trade(orders)
                     todays_order = gettodaysorder()
-            
+            #gettodaysorder()
             time.sleep(60)
         except Exception as e:
             print(e)
@@ -304,6 +312,8 @@ def set_stoploss(symbol):
         stopprice[symbol] = 0
         print("Problem with set stoploss for {} is {}".format(symbol, stopprice[symbol]))
         logger.error(e)
+        del stopprice[symbol]
+        
     
 def stoploss():
     global stopprice
@@ -332,14 +342,30 @@ def stoploss():
             if marketprice <= stopprice[symbol]:
                 # Market price is less than stop loss price.  Sell the stock.
                 shares = holdings[symbol].qty
+                '''
                 orders.append({
                     'symbol': symbol,
                     'qty': shares,
                     'side': 'sell',
                 })
-                logger.info(f'Stoploss order(sell): {symbol} for {shares}')
+                '''
+                try:
+                    logger.info(f'Stop loss submit(sell): {order}')
+                    api.submit_order(
+                        symbol=order['symbol'],
+                        qty=order['qty'],
+                        side='sell',
+                        type='limit',
+                        limit_price=str(marketprice),
+                        time_in_force='day',)
+                    symbol = order['symbol']
+                    print("Removed {} from stop price with stoploss as {}".format(symbol,stopprice[symbol]))
+                    del stopprice[symbol]
+                except Exception as e:
+                    logger.error(e)
+                #logger.info(f'Stoploss order(sell): {symbol} for {shares}')
                 #orders = get_orders(api, price_df)
-                trade(orders)
+                #trade(orders)
                 #done = None
                 
     except Exception as e:
@@ -359,8 +385,12 @@ def gettodaysorder():
         orders4mtoday = api.list_orders(status='all', after=after_dt) #,until=until_dt)
         #print("orders4mtoday - {}".format(orders4mtoday))
         order_symbols = set()
+        #print (orders4mtoday)
         for o in orders4mtoday:
-            order_symbols.add(o.symbol)
+            if (o.status == 'canceled' or o.status == 'rejected') or o.side == 'sell':
+                print("Ignoring the order for {}, side - {}, order id - {}, submitted at - {}".format(o.symbol, o.side, o.id, o.submitted_at))
+            else:
+                order_symbols.add(o.symbol)
 
         return order_symbols
     except Exception as e:
