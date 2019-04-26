@@ -252,8 +252,12 @@ def main():
                 
                 #Universe = get_tickers(min_share_price,max_share_price,min_last_dv)
                 price_df = get_tickers(min_share_price,max_share_price,min_last_dv)
-                flag_sym = False
-                flag_inirun = False
+                if flag_inirun:
+                    flag_inirun = False
+                    flag_sym = True
+                else:
+                    flag_sym = False
+                
             '''
             if flag_test:
                 Universe = UniverseT
