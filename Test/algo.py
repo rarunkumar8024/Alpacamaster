@@ -393,7 +393,6 @@ def gettodaysorder():
                 #print("Ignoring the order for {}, side - {}, order id - {}, submitted at - {}".format(o.symbol, o.side, o.id, o.submitted_at))
             else:
                 order_symbols.add(o.symbol)
-
         return order_symbols
     except Exception as e:
         logger.error(e)  
