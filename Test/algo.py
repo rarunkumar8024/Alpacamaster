@@ -390,6 +390,7 @@ def gettodaysorder():
         #print (orders4mtoday)
         for o in orders4mtoday:
             if (o.status == 'canceled' or o.status == 'rejected') or o.side == 'sell':
+                continue
                 #print("Ignoring the order for {}, side - {}, order id - {}, submitted at - {}".format(o.symbol, o.side, o.id, o.submitted_at))
             else:
                 order_symbols.add(o.symbol)
