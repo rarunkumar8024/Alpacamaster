@@ -9,7 +9,7 @@ from .universe import UniverseT
 
 # We only consider stocks with per-share prices inside this range
 min_share_price = 2.0
-max_share_price = 13.0
+max_share_price = 15.0
 # Minimum previous-day dollar volume for a stock we might consider
 min_last_dv = 500000
 # Stop limit to default to
@@ -93,7 +93,7 @@ def calc_scores(price_df, dayindex=-1):
     return sorted(diffs.items(), key=lambda x: x[1])
 
 
-def get_orders(api, price_df, position_size=100, max_positions=5):
+def get_orders(api, price_df, position_size=100, max_positions=20):
     global todays_order
     '''Calculate the scores within the universe to build the optimal
     portfolio as of today, and extract orders to transition from our
@@ -158,6 +158,7 @@ def get_orders(api, price_df, position_size=100, max_positions=5):
             'symbol': symbol,
             'qty': shares,
             'side': 'buy',
+            'limitprice': currentprice, 
         })
         logger.info(f'order(buy): {symbol} for {shares}')
         max_to_buy -= 1
@@ -211,9 +212,10 @@ def trade(orders, wait=30):
                 symbol=order['symbol'],
                 qty=order['qty'],
                 side='buy',
-                type='market',
-                time_in_force='day',
-            )
+                type='limit',
+                limit_price=order['limitprice'],
+                time_in_force='day',)
+            
             # Add stoploss entry for the ordered symbol
             set_stoploss(order['symbol']) 
         except Exception as e:
@@ -350,10 +352,10 @@ def stoploss():
                 })
                 '''
                 try:
-                    logger.info(f'Stop loss submit(sell): {order}')
+                    logger.info(f'Stop loss submit(sell): ')
                     api.submit_order(
-                        symbol=order['symbol'],
-                        qty=order['qty'],
+                        symbol=str(symbol),
+                        qty=str(shares),
                         side='sell',
                         type='limit',
                         limit_price=str(marketprice),
@@ -388,7 +390,7 @@ def gettodaysorder():
         #print (orders4mtoday)
         for o in orders4mtoday:
             if (o.status == 'canceled' or o.status == 'rejected') or o.side == 'sell':
-                print("Ignoring the order for {}, side - {}, order id - {}, submitted at - {}".format(o.symbol, o.side, o.id, o.submitted_at))
+                #print("Ignoring the order for {}, side - {}, order id - {}, submitted at - {}".format(o.symbol, o.side, o.id, o.submitted_at))
             else:
                 order_symbols.add(o.symbol)
 
