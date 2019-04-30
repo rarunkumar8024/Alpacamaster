@@ -20,11 +20,11 @@ def get_tickers(min_share_price, max_share_price, min_last_dv):
     print('Success.')
     assets = api.list_assets()
     #print("assets - {}".format(assets))
-    symbols = [asset.symbol for asset in assets if (asset.tradable and len(asset.symbol) <= 4)]
+    symbols = [asset.symbol for asset in assets if asset.tradable]
     if (len(assets) < 1 or len(symbols) < 1):
         print("No Assests or Symbols to process")
         return
-
+    print("getting tickerlist")
     tickerlist = [ticker for ticker in tickers if (
         ticker.ticker in symbols and
         ticker.prevDay['c'] >= float (min_share_price) and
