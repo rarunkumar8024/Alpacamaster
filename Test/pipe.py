@@ -35,18 +35,25 @@ def get_tickers(min_share_price, max_share_price, min_last_dv):
         )]
     #print("Tickerlist - {}".format(tickerlist))
     Universe = [ticker.ticker for ticker in tickerlist ]
-    print("Universe from Pipe - {}".format(Universe))
+    print("Universe from Pipe - {}, {}".format(len(Universe),Universe))
     day_hist = prices(Universe)
     #print(day_hist)
+    #print("back from prices routine")
     for symbol in Universe:
-        hist = macd(day_hist[symbol]['close'].dropna(), n_fast=12, n_slow=26)
-        if (hist[-1] < 0 or (not (hist[-3] < hist[-2] < hist[-1]))):
-            continue
-        hist = macd(day_hist[symbol]['close'].dropna(), n_fast=40, n_slow=60)
-        if hist[-1] < 0 or np.diff(hist)[-1] < 0:
-            continue
-        fday_hist[symbol] = day_hist[symbol]
-        fday_sym.append(symbol)
+        try:
+            #print("Processing ############# - {}".format(symbol))
+            hist = macd(day_hist[symbol]['close'].dropna(), n_fast=12, n_slow=26)
+            if (hist[-1] < 0 or (not (hist[-3] < hist[-2] < hist[-1]))):
+                continue
+            hist = macd(day_hist[symbol]['close'].dropna(), n_fast=40, n_slow=60)
+            if hist[-1] < 0 or np.diff(hist)[-1] < 0:
+                continue
+            #print("complete - {}".format(symbol))
+            fday_hist[symbol] = day_hist[symbol]
+            fday_sym.append(symbol)
+        except Exception as e:
+            print (e)
+            
     #print(fday_hist)
     print("From pipe -> {} - {}".format(len(fday_sym), fday_sym))
     
@@ -80,11 +87,11 @@ def _get_prices(symbols, end_dt, max_workers=5):
             else:
                 barset.update(get_barset(symbols[idx:idx+200]))
             idx += 200
-            print("idx value - {}".format(idx))
+            #print("idx value - {}".format(idx))
 
         return barset.df
     except Exception as e:
-            print("inside pipe exception")
+            #print("inside pipe exception")
             logger.error(e)
             return barset.df
 
@@ -95,7 +102,7 @@ def prices(symbols):
     #if now.time() >= pd.Timestamp('00:00', tz=NY).time():
     end_dt = now - \
             pd.Timedelta(now.strftime('%H:%M:%S')) - pd.Timedelta('1 minute')
-    print("calling get prices")
+    #print("calling get prices")
     return _get_prices(symbols, end_dt)
 
 #get_tickers('1','10','50000')
