@@ -80,6 +80,7 @@ def _get_prices(symbols, end_dt, max_workers=5):
             else:
                 barset.update(get_barset(symbols[idx:idx+200]))
             idx += 200
+            print("idx value - {}".format(idx))
 
         return barset.df
     except Exception as e:
