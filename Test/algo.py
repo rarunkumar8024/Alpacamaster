@@ -265,8 +265,8 @@ def main():
                 print("Universe Test - {}".format(Universe))
             #print("after get tickers - {}".format(Universe))
             '''
-            if (clock.is_open and done != now.strftime('%Y-%m-%d') and now.time() > pd.Timestamp('09:45',tz=NY).time()) 
-            or flag_test:
+            if (clock.is_open 
+                and done != now.strftime('%Y-%m-%d') and now.time() > pd.Timestamp('09:45',tz=NY).time()) or flag_test:
                 todays_order = set()
                 #if len(Universe) == 0:
                 if len(price_df) == 0:
