@@ -117,8 +117,8 @@ def get_orders(api, price_df, position_size=100, max_positions=10):
     logger.info(positions)
     holdings = {p.symbol: p for p in positions}
     holding_symbol = set(holdings.keys())
-    if todays_order is None:
-        todays_order = set()
+    #if todays_order is None:
+    #    todays_order = set()
     print("unprocessed To Buy - {}".format(to_buy))
     print("Current positions - {}, Today's order - {}".format(holding_symbol, todays_order))
     to_sell = holding_symbol - to_buy - todays_order
