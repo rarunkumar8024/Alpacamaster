@@ -21,9 +21,9 @@ def get_tickers(min_share_price, max_share_price, min_last_dv):
     assets = api.list_assets()
     #print("assets - {}".format(assets))
     symbols = [asset.symbol for asset in assets if (asset.tradable and len(asset.symbol) <= 4)]
-    #if (len(assets) < 1 or len(symbols) < 1):
-    #    print("No Assests or Symbols to process")
-    #    return
+    if (len(assets) < 1 or len(symbols) < 1):
+        print("No Assests or Symbols to process")
+        return
 
     tickerlist = [ticker for ticker in tickers if (
         ticker.ticker in symbols and
@@ -35,7 +35,7 @@ def get_tickers(min_share_price, max_share_price, min_last_dv):
         )]
     #print("Tickerlist - {}".format(tickerlist))
     Universe = [ticker.ticker for ticker in tickerlist ]
-    #print("Universe from Pipe - {}".format(Universe))
+    print("Universe from Pipe - {}".format(Universe))
     day_hist = prices(Universe)
     #print(day_hist)
     for symbol in Universe:
@@ -83,6 +83,7 @@ def _get_prices(symbols, end_dt, max_workers=5):
 
         return barset.df
     except Exception as e:
+            print("inside pipe exception")
             logger.error(e)
             return barset.df
 
@@ -93,6 +94,7 @@ def prices(symbols):
     #if now.time() >= pd.Timestamp('00:00', tz=NY).time():
     end_dt = now - \
             pd.Timedelta(now.strftime('%H:%M:%S')) - pd.Timedelta('1 minute')
+    print("calling get prices")
     return _get_prices(symbols, end_dt)
 
 #get_tickers('1','10','50000')
