@@ -5,6 +5,7 @@ import logging
 import time
 from ta import macd
 import numpy as np
+from .TVSignal import *
 
 api = tradeapi.REST()
 NY = 'US/Eastern'
@@ -35,7 +36,7 @@ def get_tickers(min_share_price, max_share_price, min_last_dv):
         )]
     #print("Tickerlist - {}".format(tickerlist))
     Universe = [ticker.ticker for ticker in tickerlist ]
-    print("Universe from Pipe - {}, {}".format(len(Universe),Universe))
+    #print("Universe from Pipe - {}, {}".format(len(Universe),Universe))
     day_hist = prices(Universe)
     #print(day_hist)
     #print("back from prices routine")
@@ -49,13 +50,24 @@ def get_tickers(min_share_price, max_share_price, min_last_dv):
             if hist[-1] < 0 or np.diff(hist)[-1] < 0:
                 continue
             #print("complete - {}".format(symbol))
+            exchange = api.get_asset(symbol).exchange
+            tvsignal = get_TVsignal(symbol,exchange)
+            #print ("TV --> {}".format(tvsignal))
+            # Select only the stocks which satisfy TV Overall signal in Buy or Strong Buy and the RSI is within 30 to 70
+            if (float(tvsignal[1]) < 0.0) or \
+            (float(tvsignal[1]) >= 0.0 and (float(tvsignal[3]) < 30 or float(tvsignal[3]) > 70)):
+                continue
+            
             fday_hist[symbol] = day_hist[symbol]
             fday_sym.append(symbol)
+            fday_hist[symbol]['tvsig'] = tvsignal[1]
+            #print("symbol - {}, Exchange - {}, TVSignal - {}".format(symbol, exchange, fday_hist[symbol]['tvsig'][-1]))
         except Exception as e:
-            print (e)
+            print ("{} - {}".format(symbol,e))
             
     #print(fday_hist)
     print("From pipe -> {} - {}".format(len(fday_sym), fday_sym))
+    
     
     return fday_hist
                 
