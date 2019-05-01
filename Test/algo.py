@@ -17,7 +17,7 @@ default_stop = .95
 # How much of our portfolio to allocate to any one position
 risk = 0.1
 done = None
-todays_order = {}
+todays_order = set()
 stopprice = {}
 
 api = tradeapi.REST()
@@ -101,8 +101,8 @@ def get_orders(api, price_df, position_size=100, max_positions=10):
     '''
     # rank the stocks based on the indicators.
     ranked = calc_scores(price_df)
-    to_buy = {}
-    to_sell = {}
+    to_buy = set()
+    to_sell = set()
     account = api.get_account()
 
     for symbol, _ in ranked[:len(ranked)]:
@@ -267,7 +267,7 @@ def main():
             '''
             if (clock.is_open 
                 and done != now.strftime('%Y-%m-%d') and now.time() > pd.Timestamp('09:45',tz=NY).time()) or flag_test:
-                todays_order = {}
+                todays_order = set()
                 #if len(Universe) == 0:
                 if len(price_df) == 0:
                     #Universe = get_tickers(min_share_price,max_share_price,min_last_dv)
