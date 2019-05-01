@@ -101,8 +101,8 @@ def get_orders(api, price_df, position_size=100, max_positions=10):
     '''
     # rank the stocks based on the indicators.
     ranked = calc_scores(price_df)
-    to_buy = set()
-    to_sell = set()
+    to_buy = {}
+    to_sell = {}
     account = api.get_account()
 
     for symbol, _ in ranked[:len(ranked)]:
