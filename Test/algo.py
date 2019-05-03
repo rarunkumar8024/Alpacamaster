@@ -18,7 +18,7 @@ default_stop = .95
 # How much of our portfolio to allocate to any one position
 risk = 0.1
 done = None
-todays_order = {}
+todays_order = set()
 stopprice = {}
 
 api = tradeapi.REST()
