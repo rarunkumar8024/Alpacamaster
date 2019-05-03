@@ -4,6 +4,7 @@ import time
 import logging
 from .pipe import get_tickers
 from .universe import UniverseT
+from .TVSignal import *
 
 #from .universe import Universe
 
@@ -129,6 +130,12 @@ def get_orders(api, price_df, position_size=100, max_positions=10):
     # if a stock is in the portfolio, and not in the desired
     # portfolio, sell it
     for symbol in to_sell:
+        exchange = api.get_asset(symbol).exchange
+        tvsignal = get_TVsignal(symbol,exchange)
+        # Skip the sell if the symbol satisfy TV Overall signal in Buy or Strong Buy and the RSI is within 30 to 70
+        if (float(tvsignal[1]) >= 0.0 and (float(tvsignal[3]) > 30 or float(tvsignal[3]) < 70)):
+            continue
+
         shares = holdings[symbol].qty
         orders.append({
             'symbol': symbol,
@@ -148,17 +155,23 @@ def get_orders(api, price_df, position_size=100, max_positions=10):
         currentprice = getcurrentprice(symbol)
         if currentprice > cash:
             continue
-        max_shares = ((cash * risk) /float (max (price_df[symbol].close.values[-1],currentprice)))
+        max_shares = (cash /float (max (price_df[symbol].close.values[-1],currentprice)))
         shares = int(min (position_size, max_shares))
         #shares = position_size // float(price_df[symbol].close.values[-1])
         if shares < 1.0:
             continue
-        
+        exchange = api.get_asset(symbol).exchange
+        tvsignal = get_TVsignal(symbol,exchange)
+        # Select only the stock that satisfy TV Overall signal in Buy or Strong Buy and the RSI is within 30 to 70
+        if (float(tvsignal[1]) < 0.0) or \
+        (float(tvsignal[1]) >= 0.0 and (float(tvsignal[3]) < 30 or float(tvsignal[3]) > 70)):
+            continue
+
         orders.append({
             'symbol': symbol,
             'qty': shares,
             'side': 'buy',
-            'limitprice': currentprice, 
+            'limitprice': (currentprice * 0.98), 
         })
         logger.info(f'order(buy): {symbol} for {shares}')
         max_to_buy -= 1
@@ -286,7 +299,7 @@ def main():
                 logger.info(f'done for {done}')
             if clock.is_open or flag_test:
                 stoploss()
-                if float(api.get_account().cash) >= 1.0:
+                if float(api.get_account().cash) >= 1.0 and now.time() > pd.Timestamp('09:45',tz=NY).time():
                     orders = get_orders(api, price_df)
                     trade(orders)
                     todays_order = gettodaysorder()
