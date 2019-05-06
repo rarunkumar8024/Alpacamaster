@@ -388,7 +388,8 @@ def stoploss():
                         symbol=str(symbol),
                         qty=str(shares),
                         side='sell',
-                        type='market',)
+                        type='market',
+                        time_in_force='day',)
                     #symbol = order['symbol']
                     print("Removed {} from stop price with stoploss as {}".format(symbol,stopprice[symbol]))
                     del stopprice[symbol]
