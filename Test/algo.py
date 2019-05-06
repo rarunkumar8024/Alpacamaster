@@ -5,6 +5,7 @@ import logging
 from .pipe import get_tickers
 from .universe import UniverseT
 from .TVSignal import *
+from .stoplossDB import *
 
 #from .universe import Universe
 
@@ -16,7 +17,7 @@ min_last_dv = 500000
 # Stop limit to default to
 default_stop = .95
 # How much of our portfolio to allocate to any one position
-risk = 0.1
+risk = 0.25
 done = None
 todays_order = set()
 stopprice = {}
@@ -67,7 +68,7 @@ def _get_prices(symbols, end_dt, max_workers=5):
 def prices(symbols):
     '''Get the map of prices in DataFrame with the symbol name key.'''
     now = pd.Timestamp.now(tz=NY)
-    end_dt = now
+    end_dt = nowd
     if now.time() >= pd.Timestamp('09:30', tz=NY).time():
         end_dt = now - \
             pd.Timedelta(now.strftime('%H:%M:%S')) - pd.Timedelta('1 minute')
@@ -155,7 +156,7 @@ def get_orders(api, price_df, position_size=100, max_positions=10):
         currentprice = getcurrentprice(symbol)
         if currentprice > cash:
             continue
-        max_shares = (cash /float (max (price_df[symbol].close.values[-1],currentprice)))
+        max_shares = ((cash * risk) /float (max (price_df[symbol].close.values[-1],currentprice)))
         shares = int(min (position_size, max_shares))
         #shares = position_size // float(price_df[symbol].close.values[-1])
         if shares < 1.0:
@@ -204,6 +205,7 @@ def trade(orders, wait=30):
             if symbol in stopprice: 
                 print("Removed {} from stop price with stoploss as {}".format(symbol,stopprice[symbol]))
                 del stopprice[symbol]
+                stopprice_delete(symbol)
         except Exception as e:
             logger.error(e)
     count = wait
@@ -248,8 +250,9 @@ def main():
     global done
     global todays_order
     flag_sym = True
-    flag_inirun = True
+    flag_inirun = False
     flag_test = False
+    flag_stoploss = True
     logging.info('start running')
     while True:
         try:
@@ -297,13 +300,16 @@ def main():
                 done = now.strftime('%Y-%m-%d')
                 flag_sym = True
                 logger.info(f'done for {done}')
-            if clock.is_open or flag_test:
+            if clock.is_open or flag_test or flag_inirun:
                 stoploss()
                 if float(api.get_account().cash) >= 1.0 and now.time() > pd.Timestamp('09:45',tz=NY).time():
                     orders = get_orders(api, price_df)
                     trade(orders)
                     todays_order = gettodaysorder()
             #gettodaysorder()
+            if flag_stoploss:
+                stoploss()
+                
             time.sleep(60)
         except Exception as e:
             print(e)
@@ -324,7 +330,12 @@ def set_stoploss(symbol):
             print("stopprice already set for the stock {}, recalculating".format(symbol))
             stopprice[symbol] = default_stop * costbasis
         else:
-            stopprice[symbol] = default_stop * costbasis
+            sprice = float(stopprice_read(symbol))
+            if sprice == 0.0:
+                stopprice[symbol] = default_stop * costbasis
+                stopprice_update(symbol,stopprice[symbol])
+            else:
+                stopprice[symbol] = sprice
 
         #stopprice[symbol] = max(stopprice[symbol] if symbol in stopprice else 0, costbasis)
         print("stoploss for {} is {}".format(symbol, stopprice[symbol]))
@@ -333,6 +344,7 @@ def set_stoploss(symbol):
         print("Problem with set stoploss for {} is {}".format(symbol, stopprice[symbol]))
         logger.error(e)
         del stopprice[symbol]
+        stopprice_delete(symbol)
         
     
 def stoploss():
@@ -349,16 +361,17 @@ def stoploss():
         for symbol in holding_symbol:
             if symbol in stopprice: 
                 None 
-            else: 
+            else:
                 set_stoploss(symbol)
             marketprice = getcurrentprice(symbol)
             stoplossprice = float (default_stop * marketprice)
             costbasis = float(holdings[symbol].avg_entry_price)
-            print("Calc stoplossprice - {}, stoploss - {}, costbasis - {}, current price - {}".format(stoplossprice,stopprice[symbol],costbasis,marketprice))
+            print("Symbol - {}, Calc stoplossprice - {}, stoploss - {}, costbasis - {}, current price - {}".format(symbol, stoplossprice,stopprice[symbol],costbasis,marketprice))
             
             if stoplossprice > stopprice[symbol]:
                 stopprice[symbol] = stoplossprice
-                print("stoploss value updated stoploss - {}, costbasis - {}, current price - {}".format(stopprice[symbol],costbasis,marketprice))
+                stopprice_update(symbol, stoplossprice)
+                print("stoploss value updated symbol - {}, stoploss - {}, costbasis - {}, current price - {}".format(symbol,stopprice[symbol],costbasis,marketprice))
             if marketprice <= stopprice[symbol]:
                 # Market price is less than stop loss price.  Sell the stock.
                 shares = holdings[symbol].qty
@@ -375,19 +388,18 @@ def stoploss():
                         symbol=str(symbol),
                         qty=str(shares),
                         side='sell',
-                        type='limit',
-                        limit_price=str(marketprice),
-                        time_in_force='day',)
+                        type='market',)
                     #symbol = order['symbol']
                     print("Removed {} from stop price with stoploss as {}".format(symbol,stopprice[symbol]))
                     del stopprice[symbol]
+                    stopprice_delete(symbol)
                 except Exception as e:
                     logger.error(e)
                 #logger.info(f'Stoploss order(sell): {symbol} for {shares}')
                 #orders = get_orders(api, price_df)
                 #trade(orders)
                 #done = None
-                
+        print("stop price array - {}".format(stopprice))        
     except Exception as e:
         logger.error(e)
 
