@@ -6,8 +6,6 @@ import os
 #stop price array - {'MIN': 3.5909999999999997, 'TSI': 5.310499999999999, 'VEON': 2.299, 'WIT': 4.313, 'ELVT': 4.5125, 'DHF': 2.964, 'IDRA': 3.3914999999999997, 'PETX': 4.5125}
 ### Standard URI format: mongodb://[dbuser:dbpassword@]host:port/dbname
 
-#uri = 'mongodb://alpacaarun:alpacamlab1@ds151416.mlab.com:51416/heroku_8d82rn03' 
-
 uri = str(os.environ.get('MONGODB_URI'))
 
 client = pymongo.MongoClient(uri)
