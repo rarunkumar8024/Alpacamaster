@@ -60,7 +60,7 @@ def get_tickers(min_share_price, max_share_price, min_last_dv):
             
             fday_hist[symbol] = day_hist[symbol]
             fday_sym.append(symbol)
-            fday_hist[symbol]['tvsig'] = tvsignal[1]
+            #fday_hist[symbol]['tvsig'] = tvsignal[1]
             #print("symbol - {}, Exchange - {}, TVSignal - {}".format(symbol, exchange, fday_hist[symbol]['tvsig'][-1]))
         except Exception as e:
             print ("{} - {}".format(symbol,e))

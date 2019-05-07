@@ -156,6 +156,11 @@ def get_orders(api, price_df, position_size=100, max_positions=10):
         currentprice = getcurrentprice(symbol)
         if currentprice > cash:
             continue
+        if cash < 5:
+            risk = 1
+        else:
+            risk = 0.25
+            
         max_shares = ((cash * risk) /float (max (price_df[symbol].close.values[-1],currentprice)))
         shares = int(min (position_size, max_shares))
         #shares = position_size // float(price_df[symbol].close.values[-1])
@@ -172,7 +177,7 @@ def get_orders(api, price_df, position_size=100, max_positions=10):
             'symbol': symbol,
             'qty': shares,
             'side': 'buy',
-            'limitprice': (currentprice * 0.98), 
+            'limitprice': (currentprice * 0.99), 
         })
         logger.info(f'order(buy): {symbol} for {shares}')
         max_to_buy -= 1

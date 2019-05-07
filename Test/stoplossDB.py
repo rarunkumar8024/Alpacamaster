@@ -8,8 +8,7 @@ import os
 
 #uri = 'mongodb://alpacaarun:alpacamlab1@ds151416.mlab.com:51416/heroku_8d82rn03' 
 
-
-uri = 'mongodb://' + str(os.environ.get('MDB_Username')) + ':' + str(os.environ.get('MDB_Password')) + '@ds151416.mlab.com:51416/heroku_8d82rn03' 
+uri = str(os.environ.get('MONGODB_URI'))
 
 client = pymongo.MongoClient(uri)
 db = client.get_default_database()
@@ -44,9 +43,8 @@ def stopprice_read(sym):
     else:
         print("Entry doesn't exists for sym - {}".format(sym))
         return z
-'''
+
 abc = 'test1'
 if stopprice_read(abc) == 0.0:
     stopprice_update(abc,'106.55')
 print ("final result - {}".format(stopprice_read(abc)))
-'''
