@@ -43,8 +43,9 @@ def stopprice_read(sym):
     else:
         print("Entry doesn't exists for sym - {}".format(sym))
         return z
-
+'''
 abc = 'test1'
 if stopprice_read(abc) == 0.0:
     stopprice_update(abc,'106.55')
 print ("final result - {}".format(stopprice_read(abc)))
+'''
