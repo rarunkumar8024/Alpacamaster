@@ -265,8 +265,10 @@ def main():
             # the boolean flag for market open
             clock = api.get_clock()
             now = clock.timestamp
+            marketdt = clock.next_close.strftime('%Y-%m-%d')
             #print("done - {}, now - {}, pd timestamp - {}, flag_sym - {}".format(done,now.time(), pd.Timestamp('08:09',tz=NY).time(), flag_sym))
             if (done != now.strftime('%Y-%m-%d') 
+                and done == marketdt
                 and now.time() > pd.Timestamp('09:35',tz=NY).time() 
                 and now.time() < pd.Timestamp('09:45',tz=NY).time() 
                 and flag_sym) or flag_inirun: 

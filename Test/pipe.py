@@ -54,8 +54,8 @@ def get_tickers(min_share_price, max_share_price, min_last_dv):
             tvsignal = get_TVsignal(symbol,exchange)
             #print ("TV --> {}".format(tvsignal))
             # Select only the stocks which satisfy TV Overall signal in Buy or Strong Buy and the RSI is within 30 to 70
-            if (float(tvsignal[1]) < 0.0) or \
-            (float(tvsignal[1]) >= 0.0 and (float(tvsignal[3]) < 30 or float(tvsignal[3]) > 70)):
+            if (float(tvsignal[1]) < 0.5) or \
+            (float(tvsignal[1]) >= 0.5 and (float(tvsignal[3]) < 30 or float(tvsignal[3]) > 70)):
                 continue
             
             fday_hist[symbol] = day_hist[symbol]
