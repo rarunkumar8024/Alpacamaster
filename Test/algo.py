@@ -6,6 +6,7 @@ from .pipe import get_tickers
 from .universe import UniverseT
 from .TVSignal import *
 from .stoplossDB import *
+#from datetime import datetime, timedelta
 
 #from .universe import Universe
 
@@ -316,7 +317,15 @@ def main():
             #gettodaysorder()
             if flag_stoploss:
                 stoploss()
-                
+            
+            #If Buy transaction is still pending after 1 hour, Cancel it
+            ts = clock.timestamp
+            ts -= pd.Timedelta('1h')
+            orders = api.list_orders('Buy')
+            for o in orders:
+                if o.filled_at == None and o.created_at <= ts and o.created_at.strftime('%Y-%m-%d') == ts.strftime('%Y-%m-%d') and o.status == 'new':
+                    api.cancel_order(o.id)
+
             time.sleep(60)
         except Exception as e:
             print(e)

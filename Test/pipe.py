@@ -30,9 +30,9 @@ def get_tickers(min_share_price, max_share_price, min_last_dv):
         ticker.ticker in symbols and
         ticker.prevDay['c'] >= float (min_share_price) and
         ticker.prevDay['c'] <= float (max_share_price) and
-        ticker.prevDay['v'] * ticker.prevDay['c'] > float(min_last_dv) #and
+        ticker.prevDay['v'] * ticker.prevDay['c'] > float(min_last_dv) and
         #len(ticker.ticker) <= 4
-        #ticker.todaysChangePerc >= 3.5
+        ticker.todaysChangePerc >= 2
         )]
     #print("Tickerlist - {}".format(tickerlist))
     Universe = [ticker.ticker for ticker in tickerlist ]
