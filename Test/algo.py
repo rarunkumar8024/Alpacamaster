@@ -294,7 +294,7 @@ def main():
             '''
             if (clock.is_open 
                 and done != now.strftime('%Y-%m-%d') and now.time() > pd.Timestamp('09:45',tz=NY).time()) or flag_test:
-                todays_order = set()
+                todays_order = gettodaysorder()
                 #if len(Universe) == 0:
                 if len(price_df) == 0:
                     #Universe = get_tickers(min_share_price,max_share_price,min_last_dv)
