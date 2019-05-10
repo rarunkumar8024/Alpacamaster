@@ -392,12 +392,12 @@ def stoploss():
                 # Market price is less than stop loss price.  Sell the stock.
                 exchange = api.get_asset(symbol).exchange
                 tvsignal = get_TVsignal(symbol,exchange)
-                # Skip the sell if the symbol satisfy TV Overall signal in Buy or Strong Buy and the RSI is within 30 to 70
-                if (float(tvsignal[1]) >= 0.0 and (float(tvsignal[3]) > 30 or float(tvsignal[3]) < 70)):
-                    continue
                 costbasis = float(position.avg_entry_price)
-                if marketprice > (default_stop * costbasis):
+                # Skip the sell if the symbol satisfy TV Overall signal in Buy or Strong Buy and the RSI is within 30 to 70
+                if (marketprice > (default_stop * costbasis)) 
+                and (float(tvsignal[1]) >= 0.0 and (float(tvsignal[3]) > 30 or float(tvsignal[3]) < 70)):
                     continue
+                
                 shares = holdings[symbol].qty
                 '''
                 orders.append({
