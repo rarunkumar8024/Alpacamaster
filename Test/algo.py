@@ -98,6 +98,7 @@ def calc_scores(price_df, dayindex=-1):
 
 def get_orders(api, price_df, position_size=100, max_positions=10):
     global todays_order
+    global done
     '''Calculate the scores within the universe to build the optimal
     portfolio as of today, and extract orders to transition from our
     current portfolio to the desired state.
@@ -127,6 +128,8 @@ def get_orders(api, price_df, position_size=100, max_positions=10):
     to_sell = holding_symbol - to_buy - todays_order
     to_buy = to_buy - holding_symbol - todays_order
     print("processed To sell - {}, To Buy - {}".format(to_sell, to_buy))
+    if len(to_buy) <= 0:
+        done = None
     orders = []
 
     # if a stock is in the portfolio, and not in the desired
