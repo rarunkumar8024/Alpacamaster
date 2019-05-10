@@ -28,8 +28,10 @@ def get_tickers(min_share_price, max_share_price, min_last_dv):
     print("getting tickerlist")
     tickerlist = [ticker for ticker in tickers if (
         ticker.ticker in symbols and
-        ticker.prevDay['c'] >= float (min_share_price) and
-        ticker.prevDay['c'] <= float (max_share_price) and
+        ticker.lastTrade['p'] >= min_share_price and
+        ticker.lastTrade['p'] <= max_share_price and
+        #ticker.prevDay['c'] >= float (min_share_price) and
+        #ticker.prevDay['c'] <= float (max_share_price) and
         ticker.prevDay['v'] * ticker.prevDay['c'] > float(min_last_dv) and
         #len(ticker.ticker) <= 4
         ticker.todaysChangePerc >= 2
@@ -43,6 +45,7 @@ def get_tickers(min_share_price, max_share_price, min_last_dv):
     for symbol in Universe:
         try:
             #print("Processing ############# - {}".format(symbol))
+            '''
             hist = macd(day_hist[symbol]['close'].dropna(), n_fast=12, n_slow=26)
             if (hist[-1] < 0 or (not (hist[-3] < hist[-2] < hist[-1]))):
                 continue
@@ -50,6 +53,7 @@ def get_tickers(min_share_price, max_share_price, min_last_dv):
             if hist[-1] < 0 or np.diff(hist)[-1] < 0:
                 continue
             #print("complete - {}".format(symbol))
+            '''
             exchange = api.get_asset(symbol).exchange
             tvsignal = get_TVsignal(symbol,exchange)
             #print ("TV --> {}".format(tvsignal))
@@ -77,7 +81,7 @@ def get_tickers(min_share_price, max_share_price, min_last_dv):
 def _get_prices(symbols, end_dt, max_workers=5):
     '''Get the map of DataFrame price data from Alpaca's data API.'''
     try:
-        start_dt = end_dt - pd.Timedelta('50 days')
+        start_dt = end_dt - pd.Timedelta('2 days')
         start = start_dt.strftime('%Y-%m-%d')
         end = end_dt.strftime('%Y-%m-%d')
 
