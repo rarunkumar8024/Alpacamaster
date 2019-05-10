@@ -376,6 +376,7 @@ def stoploss():
         logger.info(positions)
         holdings = {p.symbol: p for p in positions}
         holding_symbol = set(holdings.keys())
+        
                 
         for symbol in holding_symbol:
             if symbol in stopprice: 
@@ -393,6 +394,7 @@ def stoploss():
                 print("stoploss value updated symbol - {}, stoploss - {}, costbasis - {}, current price - {}".format(symbol,stopprice[symbol],costbasis,marketprice))
             if marketprice <= stopprice[symbol]:
                 # Market price is less than stop loss price.  Sell the stock.
+                position = api.get_position(symbol)
                 exchange = api.get_asset(symbol).exchange
                 tvsignal = get_TVsignal(symbol,exchange)
                 costbasis = float(position.avg_entry_price)
