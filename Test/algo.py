@@ -23,6 +23,11 @@ done = None
 todays_order = set()
 stopprice = {}
 
+flag_sym = True
+flag_inirun = True
+flag_test = False
+flag_stoploss = False
+
 api = tradeapi.REST()
 
 logger = logging.getLogger(__name__)
@@ -258,10 +263,10 @@ def trade(orders, wait=30):
 def main():
     global done
     global todays_order
-    flag_sym = True
-    flag_inirun = True
-    flag_test = False
-    flag_stoploss = False
+    global flag_sym
+    global flag_inirun
+    global flag_test
+    global flag_stoploss
     logging.info('start running')
     while True:
         try:
@@ -332,6 +337,7 @@ def main():
             time.sleep(60)
         except Exception as e:
             print(e)
+            print("Back in main exception")
             if flag_inirun:
                 flag_inirun = False
                 flag_sym = True
