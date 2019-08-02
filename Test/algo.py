@@ -29,7 +29,7 @@ flag_inirun = True
 flag_test = False
 flag_stoploss = False
 acc_rank = {'1','2'}
-
+price_df = []
 api = tradeapi.REST()
 
 logger = logging.getLogger(__name__)
@@ -275,6 +275,7 @@ def main():
     global flag_inirun
     global flag_test
     global flag_stoploss
+    global price_df
     logging.info('start running')
     while True:
         try:
