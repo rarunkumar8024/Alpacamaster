@@ -21,7 +21,7 @@ def get_tickers(min_share_price, max_share_price, min_last_dv):
     skp_rank = {'3','4','5','NA'}
     print('Getting current ticker data...')
     tickers = api.polygon.all_tickers()
-    #print("all tickers - {}".format(tickers))
+    print("all tickers - {}".format(tickers))
     print('Success.')
     assets = api.list_assets()
     #print("assets - {}".format(assets))
@@ -31,9 +31,9 @@ def get_tickers(min_share_price, max_share_price, min_last_dv):
         return
     print("getting tickerlist")
     tickerlist = [ticker for ticker in tickers if (
-        ticker.ticker in symbols and
-        ticker.lastTrade['p'] >= min_share_price and
-        ticker.lastTrade['p'] <= max_share_price #and
+        ticker.ticker in symbols #and
+        #ticker.lastTrade['p'] >= min_share_price and
+        #ticker.lastTrade['p'] <= max_share_price #and
         #ticker.prevDay['c'] >= float (min_share_price) and
         #ticker.prevDay['c'] <= float (max_share_price) and
         #ticker.prevDay['v'] * ticker.prevDay['c'] > float(min_last_dv) and
