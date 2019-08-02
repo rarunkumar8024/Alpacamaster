@@ -33,7 +33,7 @@ def get_tickers(min_share_price, max_share_price, min_last_dv):
     tickerlist = [ticker for ticker in tickers if (
         ticker.ticker in symbols and
         ticker.lastTrade['p'] >= min_share_price and
-        ticker.lastTrade['p'] <= max_share_price and
+        ticker.lastTrade['p'] <= max_share_price #and
         #ticker.prevDay['c'] >= float (min_share_price) and
         #ticker.prevDay['c'] <= float (max_share_price) and
         #ticker.prevDay['v'] * ticker.prevDay['c'] > float(min_last_dv) and
