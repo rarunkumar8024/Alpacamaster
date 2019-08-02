@@ -42,6 +42,9 @@ def get_tickers(min_share_price, max_share_price, min_last_dv):
         )]
     print("Tickerlist - {}".format(tickerlist))
     Universe = [ticker.ticker for ticker in tickerlist ]
+    if len(Universe) < 1:
+        Universe = symbols
+        print("Tickerlist using symbols - {}".format(Universe))
     #print("Universe from Pipe - {}, {}".format(len(Universe),Universe))
     day_hist = prices(Universe)
     #print(day_hist)
