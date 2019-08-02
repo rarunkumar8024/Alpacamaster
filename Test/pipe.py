@@ -5,6 +5,7 @@ import logging
 import time
 from ta import macd
 import numpy as np
+from .zacksignal import zacks_rank
 from .TVSignal import *
 
 api = tradeapi.REST()
@@ -15,6 +16,9 @@ logging.basicConfig(level=logging.WARNING)
 def get_tickers(min_share_price, max_share_price, min_last_dv):
     fday_hist = {}
     fday_sym = []
+    fday_sym_rk1 = []
+    fday_sym_rk2 = []
+    skp_rank = {'3','4','5','NA'}
     print('Getting current ticker data...')
     tickers = api.polygon.all_tickers()
     #print("all tickers - {}".format(tickers))
@@ -54,21 +58,29 @@ def get_tickers(min_share_price, max_share_price, min_last_dv):
                 continue
             #print("complete - {}".format(symbol))
             '''
+            rank = zacks_rank(symbol)
+            if rank in skp_rank:
+                continue
             exchange = api.get_asset(symbol).exchange
             tvsignal = get_TVsignal(symbol,exchange)
             #print ("TV --> {}".format(tvsignal))
             # Select only the stocks which satisfy TV Overall signal in Buy or Strong Buy and the RSI is within 30 to 70
-            if (float(tvsignal[1]) < 0.5) or \
-            (float(tvsignal[1]) >= 0.5 and (float(tvsignal[3]) < 30 or float(tvsignal[3]) > 70)):
+            if (float(tvsignal[1]) < 0) or \
+            (float(tvsignal[1]) >= 0 and float(tvsignal[3] > 70)): #(float(tvsignal[3]) < 30 or float(tvsignal[3]) > 70)):
                 continue
             
             fday_hist[symbol] = day_hist[symbol]
-            fday_sym.append(symbol)
+            if rank == '1':
+                fday_sym_rk1.append(symbol)
+            elif rank == '2':
+                fday_sym_rk2.append(symbol)
+            #fday_sym.append(symbol)
+            print("symbol - {}, zack Rank - {}, TVSignal - {}, RSI - {}".format(symbol,rank,tvsignal[1],tvsignal[3] ))
             #fday_hist[symbol]['tvsig'] = tvsignal[1]
             #print("symbol - {}, Exchange - {}, TVSignal - {}".format(symbol, exchange, fday_hist[symbol]['tvsig'][-1]))
         except Exception as e:
             print ("{} - {}".format(symbol,e))
-            
+    fday_sym = fday_sym_rk1 + fday_sym_rk2        
     #print(fday_hist)
     print("From pipe -> {} - {}".format(len(fday_sym), fday_sym))
     

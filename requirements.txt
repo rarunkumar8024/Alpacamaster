@@ -1,6 +1,6 @@
 pip==19.0.3
 alembic==1.0.7
-alpaca-trade-api==0.26
+alpaca-trade-api==0.37
 asyncio-nats-client==0.8.2
 bcolz==0.12.1
 Bottleneck==1.2.1

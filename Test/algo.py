@@ -6,12 +6,13 @@ from .pipe import get_tickers
 from .universe import UniverseT
 from .TVSignal import *
 from .stoplossDB import *
+from .zacksignal import zacks_rank
 #from datetime import datetime, timedelta
 
 #from .universe import Universe
 
 # We only consider stocks with per-share prices inside this range
-min_share_price = 2.0
+min_share_price = 1.0
 max_share_price = 15.0
 # Minimum previous-day dollar volume for a stock we might consider
 min_last_dv = 500000
@@ -27,6 +28,7 @@ flag_sym = True
 flag_inirun = True
 flag_test = False
 flag_stoploss = False
+acc_rank = {'1','2'}
 
 api = tradeapi.REST()
 
@@ -104,6 +106,7 @@ def calc_scores(price_df, dayindex=-1):
 def get_orders(api, price_df, position_size=100, max_positions=10):
     global todays_order
     global done
+    global acc_rank
     '''Calculate the scores within the universe to build the optimal
     portfolio as of today, and extract orders to transition from our
     current portfolio to the desired state.
@@ -142,8 +145,11 @@ def get_orders(api, price_df, position_size=100, max_positions=10):
     for symbol in to_sell:
         exchange = api.get_asset(symbol).exchange
         tvsignal = get_TVsignal(symbol,exchange)
+        rank = zacks_rank(symbol)
+
         # Skip the sell if the symbol satisfy TV Overall signal in Buy or Strong Buy and the RSI is within 30 to 70
-        if (float(tvsignal[1]) >= 0.0 and (float(tvsignal[3]) > 30 or float(tvsignal[3]) < 70)):
+        #if (float(tvsignal[1]) >= 0.0 and (float(tvsignal[3]) > 30 or float(tvsignal[3]) < 70)):
+        if (float(tvsignal[1]) >= 0.0 and float(tvsignal[3]) < 70) and (rank in acc_rank):
             continue
 
         shares = holdings[symbol].qty
@@ -177,9 +183,11 @@ def get_orders(api, price_df, position_size=100, max_positions=10):
             continue
         exchange = api.get_asset(symbol).exchange
         tvsignal = get_TVsignal(symbol,exchange)
+        rank = zacks_rank(symbol)
         # Select only the stock that satisfy TV Overall signal in Buy or Strong Buy and the RSI is within 30 to 70
-        if (float(tvsignal[1]) < 0.0) or \
-        (float(tvsignal[1]) >= 0.0 and (float(tvsignal[3]) < 30 or float(tvsignal[3]) > 70)):
+        if ((float(tvsignal[1]) < 0.0) or \
+        (float(tvsignal[1]) >= 0.0 and (float(tvsignal[3]) > 70)) or (rank not in acc_rank )):
+        # (float(tvsignal[1]) >= 0.0 and (float(tvsignal[3]) < 30 or float(tvsignal[3]) > 70)):
             continue
 
         orders.append({
@@ -377,6 +385,7 @@ def set_stoploss(symbol):
     
 def stoploss():
     global stopprice
+    global acc_rank
     #global orders
     #global done
     orders = []
@@ -406,10 +415,11 @@ def stoploss():
                 position = api.get_position(symbol)
                 exchange = api.get_asset(symbol).exchange
                 tvsignal = get_TVsignal(symbol,exchange)
+                rank = zacks_rank(symbol)
                 costbasis = float(position.avg_entry_price)
                 # Skip the sell if the symbol satisfy TV Overall signal in Buy or Strong Buy and the RSI is within 30 to 70
                 if (marketprice > (default_stop * costbasis)) and (marketprice < costbasis) \
-                and (float(tvsignal[1]) >= 0.0 and (float(tvsignal[3]) > 30 or float(tvsignal[3]) < 70)):
+                and (float(tvsignal[1]) >= 0.0 and float(tvsignal[3]) < 70) and (rank in acc_rank):
                     continue
                 
                 shares = holdings[symbol].qty

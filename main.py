@@ -1,6 +1,6 @@
 #from samplealgo import algo, btest
 #from Momentum import test1, algoarun
-from Test import algo
+from Test import algo, zacksignal
 
 if __name__ == '__main__':
     #pipe.main()
@@ -8,3 +8,4 @@ if __name__ == '__main__':
     #btest.simulate
     #test1.main()
     algo.main()
+    #zacksignal.main()
