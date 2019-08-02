@@ -40,7 +40,7 @@ def get_tickers(min_share_price, max_share_price, min_last_dv):
         #len(ticker.ticker) <= 4
         #ticker.todaysChangePerc >= 2
         )]
-    print("Tickerlist - {}".format(tickerlist))
+    #print("Tickerlist - {}".format(tickerlist))
     Universe = [ticker.ticker for ticker in tickerlist ]
     if len(Universe) < 1:
         Universe = symbols
