@@ -418,6 +418,33 @@ def stoploss():
                 tvsignal = get_TVsignal(symbol,exchange)
                 rank = zacks_rank(symbol)
                 costbasis = float(position.avg_entry_price)
+                #accumulate more shares
+                if ((float(tvsignal[1]) >= 0.0 and float(tvsignal[3]) < 70) and (rank in acc_rank)):
+                    print("Accumulating more shares when market is down")
+                    cash = float (account.cash)
+                    currentprice = getcurrentprice(symbol)
+                    if currentprice > cash:
+                        continue
+                    if cash < 5:
+                        risk = 1
+                    else:
+                        risk = 0.25
+                        
+                    shares = ((cash * risk) /float (currentprice))
+                    
+                    if shares < 1.0:
+                        continue
+                    
+                    orders.append({
+                        'symbol': symbol,
+                        'qty': shares,
+                        'side': 'buy',
+                        'limitprice': (currentprice * 0.99), 
+                    })
+                    logger.info(f'Accumulation order(buy): {symbol} for {shares}')
+                    del stopprice[symbol]
+                    stopprice_delete(symbol)
+                
                 # Skip the sell if the symbol satisfy TV Overall signal in Buy or Strong Buy and the RSI is within 30 to 70
                 if (marketprice > (default_stop * costbasis)) and (marketprice < costbasis) \
                 and (float(tvsignal[1]) >= 0.0 and float(tvsignal[3]) < 70) and (rank in acc_rank):
