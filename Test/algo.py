@@ -390,6 +390,7 @@ def stoploss():
     #global orders
     #global done
     orders = []
+    account = api.get_account()
     try:
         positions = api.list_positions()
         logger.info(positions)
@@ -420,7 +421,7 @@ def stoploss():
                 costbasis = float(position.avg_entry_price)
                 #accumulate more shares
                 if ((float(tvsignal[1]) >= 0.0 and float(tvsignal[3]) < 70) and (rank in acc_rank)):
-                    print("Accumulating more shares when market is down")
+                    print("Accumulating more shares for {}, zack rank - {}, TVsignal - {}".format(symbol, rank, tvsignal[1]))
                     cash = float (account.cash)
                     currentprice = getcurrentprice(symbol)
                     if currentprice > cash:
