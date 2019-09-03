@@ -146,7 +146,8 @@ def get_orders(api, price_df, position_size=100, max_positions=10):
         exchange = api.get_asset(symbol).exchange
         tvsignal = get_TVsignal(symbol,exchange)
         rank = zacks_rank(symbol)
-
+        if rank == 'NA':
+            continue
         # Skip the sell if the symbol satisfy TV Overall signal in Buy or Strong Buy and the RSI is within 30 to 70
         #if (float(tvsignal[1]) >= 0.0 and (float(tvsignal[3]) > 30 or float(tvsignal[3]) < 70)):
         if (float(tvsignal[1]) >= 0.0 and float(tvsignal[3]) < 70) and (rank in acc_rank):
@@ -225,7 +226,7 @@ def trade(orders, wait=30):
             )
             symbol = order['symbol']
             if symbol in stopprice: 
-                print("Removed {} from stop price with stoploss as {}".format(symbol,stopprice[symbol]))
+                print("Selling {} with stoploss as {}".format(symbol,stopprice[symbol]))
                 del stopprice[symbol]
                 stopprice_delete(symbol)
         except Exception as e:
