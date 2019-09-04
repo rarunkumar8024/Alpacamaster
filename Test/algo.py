@@ -434,13 +434,13 @@ def stoploss():
                     else:
                         risk = 0.25
                         
-                    shares = ((cash * risk) /float (currentprice))
+                    shares = int ((cash * risk) /float (currentprice))
                     
                     if shares < 1.0:
                         continue
                     api.submit_order(
                         symbol=str(symbol),
-                        qty=str(shares),
+                        qty=shares,
                         side='buy',
                         type='limit',
                         limit_price=str(currentprice * 0.995),
@@ -467,7 +467,7 @@ def stoploss():
                     logger.info(f'Stop loss submit(sell): ')
                     api.submit_order(
                         symbol=str(symbol),
-                        qty=str(shares),
+                        qty=shares,
                         side='sell',
                         type='market',
                         time_in_force='day',)
