@@ -1,4 +1,4 @@
-pip==19.0.3
+pip==21.1
 alembic==1.0.7
 alpaca-trade-api==0.38
 asyncio-nats-client==0.8.2
