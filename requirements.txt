@@ -4,7 +4,7 @@ alpaca-trade-api==0.38
 asyncio-nats-client==0.8.2
 bcolz==0.12.1
 Bottleneck==1.2.1
-certifi==2018.11.29
+certifi==2022.12.7
 chardet==3.0.4
 Click==7.0
 contextlib2==0.5.5
